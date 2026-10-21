@@ -332,7 +332,7 @@ with tab_num:
 
     calc = st.selectbox("Select Technique", ["Extended Euclidean Algorithm & Inverse", "Chinese Remainder Theorem", "Prime Factorization"])
 
-    if calc == "Extended Euclidean Algorithm & Inverse":
+if calc == "Extended Euclidean Algorithm & Inverse":
         c1, c2 = st.columns(2)
         a_val = c1.number_input("Integer a", value=17, step=1)
         m_val = c2.number_input("Modulus m", value=43, step=1)
@@ -375,7 +375,6 @@ with tab_num:
         if st.button("Factorize"):
             factors = prime_factors(int(num))
             st.write(f"Prime Decomposition of ${num}$: **`{factors}`**")
-
 # -------------------------------------------------------------
 # 5. COMBINATORICS ENGINE
 # -------------------------------------------------------------
