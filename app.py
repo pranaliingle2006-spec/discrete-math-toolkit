@@ -348,18 +348,10 @@ with tab_num:
                 * $\\gcd({a_val}, {m_val}) = {g}$
                 * Bézout's Identity: $({a_val})({x}) + ({m_val})({y}) = {g}$
                 * Modular Multiplicative Inverse: **$a^{{-1}} \\equiv {inv} \\pmod{{{m_val}}}$**
-                *proof_mod = (int(a_val) * int(inv)) % int(m_val)
-                st.markdown(f"""
-                ### Step-by-Step Bézout Solution:
-                * $\\gcd({a_val}, {m_val}) = {g}$
-                * Bézout's Identity: $({a_val})({x}) + ({m_val})({y}) = {g}$
-                * Modular Multiplicative Inverse: **$a^{{-1}} \\equiv {inv} \\pmod{{{m_val}}}$**
                 * Proof: $({a_val} \\times {inv}) \\pmod{{{m_val}}} = {proof_mod}$
-                " " ")
+                """)
             except Exception as e:
                 st.error(f"Calculation Error: {e}")
-
-    elif calc == "Chinese Remainder Theorem":
 
     elif calc == "Chinese Remainder Theorem":
         st.write("Solve systems of congruences: $x \\equiv r_i \\pmod{m_i}$")
