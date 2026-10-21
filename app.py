@@ -341,13 +341,8 @@ with tab_num:
             try:
                 g, x, y = extended_gcd(int(a_val), int(m_val))
                 inv = mod_inverse(int(a_val), int(m_val))
+                proof_mod = (int(a_val) * int(inv)) % int(m_val)
                 
-                st.markdown(f"""
-                ### Step-by-Step Bézout Solution:
-                * $\\gcd({a_val}, {m_val}) = {g}$
-                * Bézout's Identity: $({a_val})({x}) + ({m_val})({y}) = {g}$
-                * Modular Multiplicative Inverse: **$a^{{-1}} \\equiv {inv} \\pmod{{{m_val}}}$**
-                proof_mod = (a_val * inv) % m_val
                 st.markdown(f"""
                 ### Step-by-Step Bézout Solution:
                 * $\\gcd({a_val}, {m_val}) = {g}$
@@ -355,11 +350,9 @@ with tab_num:
                 * Modular Multiplicative Inverse: **$a^{{-1}} \\equiv {inv} \\pmod{{{m_val}}}$**
                 * Proof: $({a_val} \\times {inv}) \\pmod{{{m_val}}} = {proof_mod}$
                 """)
-                
             except Exception as e:
                 st.error(f"Calculation Error: {e}")
-
-    elif calc == "Chinese Remainder Theorem":
+        elif calc == "Chinese Remainder Theorem":
         st.write("Solve systems of congruences: $x \\equiv r_i \\pmod{m_i}$")
         c1, c2 = st.columns(2)
         r_in = c1.text_input("Remainders $r_i$ (comma-separated)", "2, 3, 2")
