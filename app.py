@@ -26,6 +26,7 @@ st.set_page_config(
 )
 
 # Custom High-End Soft Lavender Glassmorphism Styling
+# Custom High-End Modern Lavender Glassmorphism Styling
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -33,73 +34,99 @@ st.markdown("""
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
-    
-    code, pre {
-        font-family: 'JetBrains Mono', monospace !important;
+
+    .stApp {
+        background: radial-gradient(circle at 15% 15%, rgba(187, 154, 247, 0.08) 0%, transparent 40%),
+                    radial-gradient(circle at 85% 85%, rgba(122, 162, 247, 0.06) 0%, transparent 40%),
+                    #0e0f18 !important;
+        color: #cdd6f4;
     }
 
-    /* Soft Lavender Gradient Banner */
+    /* Hero Banner */
     .hero-banner {
-        background: linear-gradient(135deg, rgba(187, 154, 247, 0.15) 0%, rgba(122, 162, 247, 0.08) 100%);
-        border: 1px solid rgba(187, 154, 247, 0.25);
-        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(30, 32, 54, 0.6) 0%, rgba(20, 21, 35, 0.8) 100%);
+        border: 1px solid rgba(187, 154, 247, 0.2);
+        border-radius: 18px;
         padding: 24px 32px;
         margin-bottom: 24px;
-        backdrop-filter: blur(12px);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
     }
     .hero-title {
-        font-size: 2.2rem;
+        font-size: 2.1rem;
         font-weight: 800;
-        background: linear-gradient(90deg, #bb9af7 0%, #c0caf5 100%);
+        background: linear-gradient(90deg, #c0caf5 0%, #bb9af7 50%, #7aa2f7 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0;
+        letter-spacing: -0.02em;
     }
     .hero-subtitle {
         color: #9aa5ce;
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         margin-top: 6px;
     }
 
-    /* Glass Cards for Educational Breakdowns */
+    /* Cards */
     .edu-card {
-        background: rgba(26, 27, 38, 0.7);
-        border: 1px solid rgba(86, 95, 137, 0.35);
-        border-radius: 12px;
-        padding: 18px 22px;
-        margin-bottom: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        background: rgba(22, 24, 40, 0.65);
+        border: 1px solid rgba(187, 154, 247, 0.15);
+        border-radius: 14px;
+        padding: 18px 24px;
+        margin-bottom: 18px;
+        backdrop-filter: blur(12px);
     }
     .edu-badge {
         display: inline-block;
-        background: rgba(187, 154, 247, 0.18);
+        background: rgba(187, 154, 247, 0.15);
         color: #bb9af7;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
         padding: 4px 10px;
         border-radius: 6px;
-        margin-bottom: 10px;
+        border: 1px solid rgba(187, 154, 247, 0.25);
+        margin-bottom: 8px;
     }
 
-    /* Tab enhancements */
+    /* Tabs Bar */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background: rgba(26, 27, 38, 0.4);
-        padding: 6px;
-        border-radius: 12px;
-        border: 1px solid rgba(86, 95, 137, 0.25);
+        gap: 10px;
+        background: rgba(18, 19, 32, 0.7);
+        padding: 6px 10px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
     }
     .stTabs [data-baseweb="tab"] {
-        border-radius: 8px;
+        border-radius: 10px;
         padding: 8px 18px;
         font-weight: 600;
-        color: #7aa2f7;
+        color: #a6adc8;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
     }
     .stTabs [aria-selected="true"] {
-        background-color: rgba(187, 154, 247, 0.2) !important;
-        color: #bb9af7 !important;
+        background: linear-gradient(135deg, rgba(187, 154, 247, 0.22) 0%, rgba(122, 162, 247, 0.12) 100%) !important;
+        border: 1px solid rgba(187, 154, 247, 0.35) !important;
+        color: #c0caf5 !important;
+        box-shadow: 0 4px 15px rgba(187, 154, 247, 0.15);
+    }
+
+    /* Inputs & Buttons */
+    div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
+        background-color: rgba(22, 24, 38, 0.8) !important;
+        border: 1px solid rgba(187, 154, 247, 0.2) !important;
+        border-radius: 10px !important;
+    }
+    .stButton > button {
+        background: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%) !important;
+        color: #0c0d14 !important;
+        font-weight: 700 !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 10px 24px !important;
+        box-shadow: 0 4px 16px rgba(187, 154, 247, 0.25) !important;
     }
 </style>
 """, unsafe_allow_html=True)
