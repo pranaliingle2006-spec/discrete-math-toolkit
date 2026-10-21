@@ -511,31 +511,20 @@ with tab_num:
                     """)
 
                     if g == 1:
-                        proof_val = (a_int * inv) % m_int
-                        st.markdown(f"""
-                        #### Phase 3: Modular Inverse Derivation
-                        Modulo ${m_int}$, the term $({m_int})({y}) \\equiv 0 \\pmod{{{m_int}}}$. Therefore:
-                        $$({a_int})({x}) \\equiv 1 \\pmod{{{m_int}}}$$
-                        Because $x = {x}$ may be negative, we compute the canonical representative:
-                        $$x \\pmod{{{m_int}}} = {x} \\pmod{{{m_int}}} = \\mathbf{{{inv}}}$$
+                    status_label = "✅ Correct (Identity holds)" if proof_val == 1 else "❌ Error"
+                    st.markdown(f"""
+                    #### Phase 3: Modular Inverse Derivation
+                    Modulo ${m_int}$, the term $({m_int})({y}) \\equiv 0 \\pmod{{{m_int}}}$. Therefore:
+                    $$({a_int})({x}) \\equiv 1 \\pmod{{{m_int}}}$$
+                    Because $x = {x}$ may be negative, we compute the canonical representative:
+                    $$x \\pmod{{{m_int}}} = {x} \\pmod{{{m_int}}} = \\mathbf{{{inv}}}$$
 
-                        #### Phase 4: Verification Check
-                        $$({a_int} \\times {inv}) = {a_int * inv}$$
-                        status_label = "✅ Correct (Identity holds)" if proof_val == 1 else "❌ Error"
-                        st.markdown(f"""
-                        #### Phase 3: Modular Inverse Derivation
-                        Modulo ${m_int}$, the term $({m_int})({y}) \\equiv 0 \\pmod{{{m_int}}}$. Therefore:
-                        $$({a_int})({x}) \\equiv 1 \\pmod{{{m_int}}}$$
-                        Because $x = {x}$ may be negative, we compute the canonical representative:
-                        $$x \\pmod{{{m_int}}} = {x} \\pmod{{{m_int}}} = \\mathbf{{{inv}}}$$
-
-                        #### Phase 4: Verification Check
-                        $$({a_int} \\times {inv}) = {a_int * inv}$$
-                        $$({a_int * inv}) \\pmod{{{m_int}}} = \\mathbf{{{proof_val}}} \\quad \\text{{{status_label}}}$$
-                        """)
-                        """)
-                    else:
-                        st.info(f"Since $\\gcd({a_int}, {m_int}) = {g} > 1$, $a$ and $m$ share a common factor. No integer $x$ can satisfy $a \\cdot x \\equiv 1 \\pmod m$.")
+                    #### Phase 4: Verification Check
+                    $$({a_int} \\times {inv}) = {a_int * inv}$$
+                    $$({a_int * inv}) \\pmod{{{m_int}}} = \\mathbf{{{proof_val}}} \\quad \\text{{{status\_label}}}$$
+                    """)
+                else:
+                    st.info(f"Since $\\gcd({a_int}, {m_int}) = {g} > 1$, $a$ and $m$ share a common factor. No integer $x$ can satisfy $a \\cdot x \\equiv 1 \\pmod m$.")
 
             except Exception as e:
                 st.error(f"Calculation Error: {e}")
@@ -667,19 +656,21 @@ with tab_num:
                 c2.metric("Total Divisors d(n)", num_divisors)
                 c3.metric("Euler's Totient φ(n)", phi_val)
 
+                div_formula = " \\times ".join([f"({exp} + 1)" for exp in factors.values()])
+
                 st.markdown(f"""
                 * **Fundamental Theorem of Arithmetic:** Every integer $n > 1$ can be represented uniquely as a product of prime powers:
                   $$n = \\prod_{{i=1}}^{{k}} p_i^{{a_i}} = {decomp_latex}$$
                 * **Divisor Count Formula $d(n)$:**
-                  $$d({n}) = \\prod (a_i + 1) = {' \\times '.join(f'({exp} + 1)' for exp in factors.values())} = \\mathbf{{{num_divisors}}}$$
+                  $$d({n}) = \\prod (a_i + 1) = {div_formula} = \\mathbf{{{num_divisors}}}$$
                 * **Euler's Totient $\\phi(n)$ (Coprime Count):**
                   The count of integers in $[1, {n}]$ coprime to ${n}$ is:
-                  $$\\phi({n}) = {n} \\prod_{{p \vert{} n}} \\left(1 - \\frac{{1}}{{p}}\\right) = \\mathbf{{{phi_val}}}$$
+                  $$\\phi({n}) = \\mathbf{{{phi_val}}}$$
                 """)
+
 # -------------------------------------------------------------
 # 5. COMBINATORICS ENGINE
 # -------------------------------------------------------------
-
 with tab_comb:
     st.markdown("""
     <div class="edu-card">
@@ -690,6 +681,8 @@ with tab_comb:
         </p>
     </div>
     """, unsafe_allow_html=True)
+
+    import math
 
     col1, col2 = st.columns(2)
     n_param = col1.number_input("Total Elements (n)", min_value=0, max_value=30, value=5, step=1)
