@@ -1,12 +1,14 @@
 import sys
 from pathlib import Path
 
+# Add project root directory to Python module search path
 root_dir = Path(__file__).parent.resolve()
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
 import streamlit as st
 import ast
+import math
 import pandas as pd
 from core.logic import truth_table, set_operations, classify_relation
 from core.combinatorics import permutations, combinations, derangements, stars_and_bars
@@ -25,7 +27,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom High-End Soft Lavender Glassmorphism Styling
 # Custom High-End Modern Lavender Glassmorphism Styling
 st.markdown("""
 <style>
@@ -112,36 +113,18 @@ st.markdown("""
         color: #c0caf5 !important;
         box-shadow: 0 4px 15px rgba(187, 154, 247, 0.15);
     }
-
-    /* Inputs & Buttons */
-    div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
-        background-color: rgba(22, 24, 38, 0.8) !important;
-        border: 1px solid rgba(187, 154, 247, 0.2) !important;
-        border-radius: 10px !important;
-    }
-    .stButton > button {
-        background: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%) !important;
-        color: #0c0d14 !important;
-        font-weight: 700 !important;
-        border: none !important;
-        border-radius: 10px !important;
-        padding: 10px 24px !important;
-        box-shadow: 0 4px 16px rgba(187, 154, 247, 0.25) !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------------------------------------------------
-# TOP HERO BANNER
-# -------------------------------------------------------------
+# Hero Header
 st.markdown("""
 <div class="hero-banner">
-    <div class="hero-title">🔮 Discrete Mathematics Learning Studio</div>
-    <div class="hero-subtitle">Interactive algorithmic explorations, step-by-step mathematical proofs, and applied cryptosystems.</div>
+    <h1 class="hero-title">🔮 Discrete Mathematics Learning Studio</h1>
+    <p class="hero-subtitle">Interactive algorithmic explorations, step-by-step mathematical proofs, and applied cryptosystems.</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Navigation tabs
+# Tab Navigation
 tab_graph, tab_crypto, tab_logic, tab_num, tab_comb, tab_audit = st.tabs([
     "🕸️ Graph Playground",
     "🔐 RSA & Cryptography Lab",
@@ -160,71 +143,76 @@ with tab_graph:
         <span class="edu-badge">Module: Graph Theory</span>
         <h4 style="margin: 0; color: #c0caf5;">Interactive Network Analyzer & Physics Visualizer</h4>
         <p style="color: #9aa5ce; font-size: 0.95rem; margin-top: 6px;">
-            Construct custom graph topologies to inspect <b>bipartiteness, connectivity, Euler paths, cycle bounds</b>, and degree-scaled dynamic layouts in real time.
+            Construct graph topologies to inspect connectivity, bipartite structures, adjacency matrices, and cycle detection.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    col_ctrl, col_view = st.columns([1, 2])
-    
+    col_ctrl, col_view = st.columns([1, 1])
+
     with col_ctrl:
         st.subheader("Graph Construction")
         preset = st.selectbox(
             "Load a Standard Topology Preset",
-            ["Custom", "Cycle Graph C5", "Complete Graph K5", "Petersen Graph (Preview)", "Star Graph S6"]
+            ["Custom", "Cycle C5", "Complete K4", "Petersen Graph (Edges)", "Star Tree"]
         )
-        
-        preset_edges = {
+
+        preset_map = {
             "Custom": "[(1, 2), (2, 3), (3, 4), (4, 1), (2, 4)]",
-            "Cycle Graph C5": "[(1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]",
-            "Complete Graph K5": "[(1,2), (1,3), (1,4), (1,5), (2,3), (2,4), (2,5), (3,4), (3,5), (4,5)]",
-            "Petersen Graph (Preview)": "[(1,2), (2,3), (3,4), (4,5), (5,1), (1,6), (2,7), (3,8), (4,9), (5,10), (6,8), (8,10), (10,7), (7,9), (9,6)]",
-            "Star Graph S6": "[(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]"
+            "Cycle C5": "[(1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]",
+            "Complete K4": "[(1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)]",
+            "Petersen Graph (Edges)": "[(1,2), (2,3), (3,4), (4,5), (5,1), (1,6), (2,7), (3,8), (4,9), (5,10), (6,8), (8,10), (10,7), (7,9), (9,6)]",
+            "Star Tree": "[(1, 2), (1, 3), (1, 4), (1, 5)]"
         }
-        
-        edges_input = st.text_area(
-            "Edge Tuples",
-            value=preset_edges[preset],
-            height=120,
-            help="Specify edge connections using standard (u, v) pairs."
-        )
+
+        edge_input = st.text_area("Edge Tuples", value=preset_map[preset], height=90)
         is_directed = st.toggle("Directed Network", value=False)
-        render_btn = st.button("Analyze & Render Graph", type="primary", use_container_width=True)
+        render_btn = st.button("Analyze & Render Graph", type="primary")
 
     with col_view:
-        if render_btn or preset != "Custom":
+        if render_btn or edge_input:
             try:
-                edges = ast.literal_eval(edges_input)
+                edges = ast.literal_eval(edge_input)
                 g = Graph(directed=is_directed)
                 for u, v in edges:
                     g.add_edge(str(u), str(v))
-                
-                # Topological Indicators
-                m1, m2, m3, m4 = st.columns(4)
-                m1.metric("Order |V|", len(g.nodes))
-                m2.metric("Size |E|", len(edges))
-                m3.metric("Components", len(g.connected_components()))
-                has_cycle = g.has_cycle()
-                m4.metric("Contains Cycle?", "Yes" if has_cycle else "No", delta="Acyclic" if not has_cycle else "Cyclic", delta_color="inverse")
-                
-                # Render Pyvis HTML
-                html_file = g.visualize_to_html(open_browser=False)
-                with open(html_file, "r", encoding="utf-8") as f:
-                    html_content = f.read()
-                
-                st.components.v1.html(html_content, height=620, scrolling=False)
-                
-                with st.expander("🔬 View Adjacency & Incidence Matrix"):
-                    nodes, adj_matrix = g.get_adjacency_matrix()
-                    adj_df = pd.DataFrame(adj_matrix, index=nodes, columns=nodes)
-                    st.write("**Adjacency Matrix $A(G)$:**")
-                    st.dataframe(adj_df, use_container_width=True)
+
+                nodes_list, adj_mat = g.get_adjacency_matrix()
+                comps = g.connected_components()
+                has_cyc = g.has_cycle()
+                is_tr = g.is_tree()
+
+                # Metrics HUD
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Vertices |V|", len(g.nodes))
+                m2.metric("Edges |E|", len(g.edges))
+                m3.metric("Components", len(comps))
+
+                st.write(f"**Has Cycle:** `{'Yes' if has_cyc else 'No'}` | **Is Tree:** `{'Yes' if is_tr else 'No'}`")
+
+                with st.expander("📊 Adjacency Matrix Representation", expanded=False):
+                    df_mat = pd.DataFrame(adj_mat, index=nodes_list, columns=nodes_list)
+                    st.dataframe(df_mat, use_container_width=True)
+
+                # Pyvis Visualization rendering
+                try:
+                    from pyvis.network import Network
+                    net = Network(height="340px", width="100%", bgcolor="#0e0f18", font_color="#c0caf5")
+                    for node in g.nodes:
+                        net.add_node(node, label=str(node), color="#bb9af7", size=18)
+                    for u, v in g.edges:
+                        net.add_edge(u, v, color="#7aa2f7")
+                    
+                    html_path = "temp_graph.html"
+                    net.save_graph(html_path)
+                    with open(html_path, "r", encoding="utf-8") as f:
+                        st.components.v1.html(f.read(), height=360)
+                except Exception as pyvis_err:
+                    st.info(f"Interactive Pyvis render preview: {pyvis_err}")
+
             except Exception as e:
                 st.error(f"Error parsing graph structure: {e}")
 
-# -------------------------------------------------------------
-# 2. RSA & CRYPTOGRAPHY LAB
-# -------------------------------------------------------------
 # -------------------------------------------------------------
 # 2. RSA & CRYPTOGRAPHY LAB
 # -------------------------------------------------------------
@@ -234,16 +222,14 @@ with tab_crypto:
         <span class="edu-badge">Module: Applied Cryptography</span>
         <h4 style="margin: 0; color: #c0caf5;">Asymmetric RSA & Modular Affine Ciphers</h4>
         <p style="color: #9aa5ce; font-size: 0.95rem; margin-top: 6px;">
-            See how the <b>Extended Euclidean Algorithm</b> and <b>Euler's Totient Theorem</b> power modern digital security through verifiable one-way trapdoor functions.
+            See how the <b>Extended Euclidean Algorithm</b> and <b>Euler's Totient Theorem</b> power modern digital security through verifiable trapdoor functions.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
     crypto_mode = st.radio("Select Cryptosystem", ["RSA Public-Key Cryptosystem", "Affine Substitution Cipher"], horizontal=True)
 
-    # =========================================================
-    # 1. RSA PUBLIC-KEY ALGORITHM
-    # =========================================================
+    # 1. RSA
     if crypto_mode == "RSA Public-Key Cryptosystem":
         if "rsa_keys" not in st.session_state:
             st.session_state.rsa_keys = generate_rsa_keys()
@@ -272,15 +258,16 @@ with tab_crypto:
             """)
 
             with st.expander("🔑 How Key Generation Works (Euler's Totient & Bézout)", expanded=False):
+                ed_mod = (e * d) % phi
                 st.markdown(f"""
                 1. **Choose two primes:** $p = {p}, \\; q = {q}$
-                2. **Compute Modulus:** $n = {p} \\times {q} = {n}$ (Publicly shared). Factoring $n$ back into $p, q$ is computationally hard for large numbers.
+                2. **Compute Modulus:** $n = {p} \\times {q} = {n}$ (Publicly shared). Factoring $n$ back into $p, q$ is computationally intractable for large numbers.
                 3. **Compute Totient:** $\\phi(n) = ({p}-1)({q}-1) = {phi}$
                 4. **Select Public Exponent $e$:** Chosen such that $\\gcd(e, \\phi(n)) = \\gcd({e}, {phi}) = 1$.
                 5. **Compute Private Exponent $d$ via Bézout's Identity:**
                    $$e \\cdot d \\equiv 1 \\pmod{{\\phi(n)}}$$
-                   $$({e})({d}) \\pmod{{{phi}}} = {(e * d) % phi}$$
-                   Anyone knowing $d$ can reverse exponentiation modulo $n$.
+                   $$({e})({d}) \\pmod{{{phi}}} = {ed_mod}$$
+                   Anyone knowing $d$ can invert exponentiation modulo $n$.
                 """)
 
         with col_right:
@@ -302,43 +289,37 @@ with tab_crypto:
                 char_steps = []
                 for ch, c_val in zip(plain_msg, cipher_tokens):
                     m_ord = ord(ch)
-                    # Recovery calculation
                     recovered_ord = pow(c_val, d, n)
                     recovered_ch = chr(recovered_ord)
                     char_steps.append({
                         "Char": ch,
-                        "ASCII $M = \\text{ord}(c)$": m_ord,
-                        "Encryption: $C = M^e \\pmod n$": f"{m_ord}^{{{e}}} \\equiv {c_val} \\pmod{{{n}}}",
-                        "Cipher Token $C$": c_val,
-                        "Decryption: $M = C^d \\pmod n$": f"{c_val}^{{{d}}} \\equiv {recovered_ord} \\pmod{{{n}}}",
+                        "ASCII M": m_ord,
+                        "Encryption C = M^e mod n": f"{m_ord}^{{{e}}} mod {n} = {c_val}",
+                        "Cipher Token C": c_val,
+                        "Decryption M = C^d mod n": f"{c_val}^{{{d}}} mod {n} = {recovered_ord}",
                         "Recovered Char": recovered_ch
                     })
                 st.table(pd.DataFrame(char_steps))
 
-                st.info(f"""
+                st.info("""
                 **Why does decryption work?**  
-                By **Euler's Totient Theorem**, since $e \\cdot d \\equiv 1 \\pmod{{\\phi(n)}}$, there exists an integer $k$ such that $e \\cdot d = 1 + k \\cdot \\phi(n)$.  
+                By **Euler's Totient Theorem**, since $e \\cdot d \\equiv 1 \\pmod{\\phi(n)}$, there exists an integer $k$ such that $e \\cdot d = 1 + k \\cdot \\phi(n)$.  
                 Therefore:  
-                $$C^d \\equiv (M^e)^d = M^{{e \\cdot d}} = M^{{1 + k \\cdot \\phi(n)}} = M \\cdot (M^{{\\phi(n)}})^k \\equiv M \\cdot (1)^k \\equiv M \\pmod n$$
+                $$C^d \\equiv (M^e)^d = M^{e \\cdot d} = M^{1 + k \\cdot \\phi(n)} = M \\cdot (M^{\\phi(n)})^k \\equiv M \\cdot (1)^k \\equiv M \\pmod n$$
                 """)
 
-    # =========================================================
-    # 2. AFFINE SUBSTITUTION CIPHER
-    # =========================================================
+    # 2. Affine Cipher
     else:
         st.subheader("Affine Cipher: $E(x) = (a \\cdot x + b) \\pmod{26}$")
-        st.markdown("A monoalphabetic substitution cipher combining modular multiplication (decimation) and modular addition (shift).")
-
         col_a, col_b, col_t = st.columns(3)
         msg_aff = col_t.text_input("Plaintext (A-Z)", value="DISCRETE")
         a_key = col_a.number_input("Multiplier a (coprime to 26)", value=5, min_value=1, max_value=25, step=1)
         b_key = col_b.number_input("Additive Shift b", value=8, min_value=0, max_value=25, step=1)
 
-        import math
         gcd_val = math.gcd(int(a_key), 26)
 
         if gcd_val != 1:
-            st.error(f"❌ Key $a = {a_key}$ is invalid! $\\gcd({a_key}, 26) = {gcd_val} \\neq 1$. An inverse does not exist modulo 26, so decryption would be impossible.")
+            st.error(f"❌ Key $a = {a_key}$ is invalid! $\\gcd({a_key}, 26) = {gcd_val} \\neq 1$. Key must be coprime to 26.")
         else:
             a_inv = mod_inverse(int(a_key), 26)
             enc_text = affine_encrypt(msg_aff, int(a_key), int(b_key))
@@ -349,10 +330,11 @@ with tab_crypto:
             c_dec.metric("Decrypted Verification", dec_text)
 
             with st.expander("📝 Step-by-Step Substitution Walkthrough", expanded=True):
+                inv_check = (int(a_key) * a_inv) % 26
                 st.markdown(f"""
                 #### Key Mathematical Inversion
                 * **Encryption Key:** $a = {a_key}, \\; b = {b_key}$
-                * **Decryption Key $a^{{-1}} \\pmod{{26}}$:** $({a_key} \\times {a_inv}) \\pmod{{26}} = {(int(a_key) * a_inv) % 26} \\implies \\mathbf{{a^{{-1}} = {a_inv}}}$
+                * **Decryption Key $a^{{-1}} \\pmod{{26}}$:** $({a_key} \\times {a_inv}) \\pmod{{26}} = {inv_check} \\implies \\mathbf{{a^{{-1}} = {a_inv}}}$
                 * **Decryption Formula:** 
                   $$D(y) = a^{{-1}}(y - b) \\pmod{{26}} = {a_inv}(y - {b_key}) \\pmod{{26}}$$
                 """)
@@ -365,10 +347,10 @@ with tab_crypto:
                         recovered_x = (a_inv * (y - int(b_key))) % 26
                         step_data.append({
                             "Plain Letter": orig_ch,
-                            "Index $x$ (0-25)": x,
-                            "Encrypt: $(a \\cdot x + b) \\pmod{26}$": f"({a_key} \\times {x} + {b_key}) \\pmod{{26}} = {y}",
+                            "Index x": x,
+                            "Encrypt: (a*x + b) mod 26": f"({a_key} * {x} + {b_key}) mod 26 = {y}",
                             "Cipher Letter": enc_ch,
-                            "Decrypt: $a^{-1}(y - b) \\pmod{26}$": f"{a_inv}({y} - {b_key}) \\pmod{{26}} = {recovered_x}",
+                            "Decrypt: a^-1(y - b) mod 26": f"{a_inv}({y} - {b_key}) mod 26 = {recovered_x}",
                             "Recovered Letter": chr(recovered_x + ord('A'))
                         })
 
@@ -394,13 +376,12 @@ with tab_logic:
     if tool == "Truth Table Generator":
         sample_expr = st.selectbox("Load Expression Preset", ["P and (not Q)", "(P or Q) and (not P)", "(P and Q) or (not P and not Q)"])
         expr = st.text_input("Boolean Formula (Uppercase variables, Python operators: and, or, not)", value=sample_expr)
-        
+
         if st.button("Evaluate Truth Table", type="primary"):
             try:
                 headers, rows = truth_table(expr)
                 df = pd.DataFrame(rows, columns=headers)
-                
-                # Check for Tautology / Contradiction
+
                 final_col = df[expr]
                 if all(val == "T" for val in final_col):
                     st.success("Result: The proposition is a **TAUTOLOGY** (Always True).")
@@ -408,7 +389,7 @@ with tab_logic:
                     st.error("Result: The proposition is a **CONTRADICTION** (Always False).")
                 else:
                     st.info("Result: The proposition is **CONTINGENT** (Satisfiable).")
-                
+
                 st.dataframe(df, use_container_width=True)
             except Exception as e:
                 st.error(f"Syntax Error in Boolean Expression: {e}")
@@ -418,14 +399,14 @@ with tab_logic:
         c1, c2 = st.columns(2)
         dom_in = c1.text_input("Domain Set A (comma-separated)", "1, 2, 3")
         pairs_in = c2.text_input("Relation Pairs R", "[(1,1), (2,2), (3,3), (1,2), (2,1)]")
-        
-        if st.button("Classify Relation Properties"):
+
+        if st.button("Classify Relation Properties", type="primary"):
             try:
                 dom = set([x.strip() for x in dom_in.split(",") if x.strip()])
                 pairs = set(ast.literal_eval(pairs_in))
                 str_pairs = {(str(x), str(y)) for x, y in pairs}
                 res = classify_relation(dom, str_pairs)
-                
+
                 for prop, is_valid in res.items():
                     if is_valid:
                         st.success(f"✔ **{prop}**: Valid")
@@ -438,8 +419,8 @@ with tab_logic:
         c1, c2 = st.columns(2)
         s_a = c1.text_input("Set A", "1, 2, 3, 4")
         s_b = c2.text_input("Set B", "3, 4, 5, 6")
-        
-        if st.button("Compute Operations"):
+
+        if st.button("Compute Operations", type="primary"):
             set_a = set([x.strip() for x in s_a.split(",") if x.strip()])
             set_b = set([x.strip() for x in s_b.split(",") if x.strip()])
             res = set_operations(set_a, set_b)
@@ -448,7 +429,6 @@ with tab_logic:
 # -------------------------------------------------------------
 # 4. NUMBER THEORY & CRT
 # -------------------------------------------------------------
-
 with tab_num:
     st.markdown("""
     <div class="edu-card">
@@ -466,9 +446,6 @@ with tab_num:
         "Prime Factorization & Divisor Analysis"
     ])
 
-    # ---------------------------------------------------------
-    # 1. EXTENDED EUCLIDEAN ALGORITHM & MODULAR INVERSE
-    # ---------------------------------------------------------
     if calc == "Extended Euclidean Algorithm & Inverse":
         st.write("Find $\\gcd(a, m)$, compute Bézout coefficients $x, y$ such that $a \\cdot x + m \\cdot y = \\gcd(a, m)$, and determine the modular multiplicative inverse $a^{-1} \\pmod m$.")
         c1, c2 = st.columns(2)
@@ -480,7 +457,6 @@ with tab_num:
                 a_int = int(a_val)
                 m_int = int(m_val)
 
-                # Trace Euclidean steps
                 steps = []
                 temp_a, temp_b = a_int, m_int
                 while temp_b != 0:
@@ -510,28 +486,26 @@ with tab_num:
                     * **Bézout coefficient for $m$ ($y$):** `{y}`
                     """)
 
-                if g == 1:
-                    status_label = "✅ Correct (Identity holds)" if proof_val == 1 else "❌ Error"
-                    st.markdown(f"""
-                    #### Phase 3: Modular Inverse Derivation
-                    Modulo ${m_int}$, the term $({m_int})({y}) \\equiv 0 \\pmod{{{m_int}}}$. Therefore:
-                    $$({a_int})({x}) \\equiv 1 \\pmod{{{m_int}}}$$
-                    Because $x = {x}$ may be negative, we compute the canonical representative:
-                    $$x \\pmod{{{m_int}}} = {x} \\pmod{{{m_int}}} = \\mathbf{{{inv}}}$$
+                    if g == 1:
+                        proof_val = (a_int * inv) % m_int
+                        status_label = "✅ Correct (Identity holds)" if proof_val == 1 else "❌ Error"
+                        st.markdown(f"""
+                        #### Phase 3: Modular Inverse Derivation
+                        Modulo ${m_int}$, the term $({m_int})({y}) \\equiv 0 \\pmod{{{m_int}}}$. Therefore:
+                        $$({a_int})({x}) \\equiv 1 \\pmod{{{m_int}}}$$
+                        Because $x = {x}$ may be negative, we compute the canonical representative:
+                        $$x \\pmod{{{m_int}}} = {x} \\pmod{{{m_int}}} = \\mathbf{{{inv}}}$$
 
-                    #### Phase 4: Verification Check
-                    $$({a_int} \\times {inv}) = {a_int * inv}$$
-                    $$({a_int * inv}) \\pmod{{{m_int}}} = \\mathbf{{{proof_val}}} \\quad \\text{{{status_label}}}$$
-                    """)
-                else:
-                    st.info(f"Since $\\gcd({a_int}, {m_int}) = {g} > 1$, $a$ and $m$ share a common factor. No integer $x$ can satisfy $a \\cdot x \\equiv 1 \\pmod m$.")
+                        #### Phase 4: Verification Check
+                        $$({a_int} \\times {inv}) = {a_int * inv}$$
+                        $$({a_int * inv}) \\pmod{{{m_int}}} = \\mathbf{{{proof_val}}} \\quad \\text{{{status\_label}}}$$
+                        """)
+                    else:
+                        st.info(f"Since $\\gcd({a_int}, {m_int}) = {g} > 1$, $a$ and $m$ share a common factor. No integer $x$ can satisfy $a \\cdot x \\equiv 1 \\pmod m$.")
 
             except Exception as e:
                 st.error(f"Calculation Error: {e}")
 
-    # ---------------------------------------------------------
-    # 2. CHINESE REMAINDER THEOREM (CRT)
-    # ---------------------------------------------------------
     elif calc == "Chinese Remainder Theorem":
         st.write("Solve simultaneous modular systems: $x \\equiv r_i \\pmod{m_i}$ where all moduli $m_i$ are pairwise coprime.")
         c1, c2 = st.columns(2)
@@ -549,9 +523,6 @@ with tab_num:
                     st.error("Please enter at least one congruence.")
                 else:
                     k = len(m_vals)
-                    import math
-                    
-                    # 1. Pairwise Coprimality Verification
                     not_coprime = []
                     for i in range(k):
                         for j in range(i + 1, k):
@@ -559,14 +530,12 @@ with tab_num:
                                 not_coprime.append(f"gcd({m_vals[i]}, {m_vals[j]}) = {math.gcd(m_vals[i], m_vals[j])}")
 
                     if not_coprime:
-                        st.error(f"The moduli are not pairwise coprime! CRT requires $\\gcd(m_i, m_j) = 1$. Conflicts: {', '.join(not_coprime)}")
+                        st.error(f"The moduli are not pairwise coprime! Conflicts: {', '.join(not_coprime)}")
                     else:
-                        # 2. Compute Total M
                         total_M = 1
                         for m in m_vals:
                             total_M *= m
 
-                        # 3. Compute M_i and Inverses y_i
                         table_rows = []
                         terms = []
                         total_sum = 0
@@ -625,9 +594,6 @@ with tab_num:
             except Exception as e:
                 st.error(f"Error solving system: {e}")
 
-    # ---------------------------------------------------------
-    # 3. PRIME FACTORIZATION & NUMBER THEORY PROPERTIES
-    # ---------------------------------------------------------
     elif calc == "Prime Factorization & Divisor Analysis":
         st.write("Decompose an integer into its unique prime factor representation according to the **Fundamental Theorem of Arithmetic**.")
         num_in = st.number_input("Integer n to factorize", value=360, min_value=2, step=1)
@@ -636,17 +602,14 @@ with tab_num:
             n = int(num_in)
             factors = prime_factors(n)
 
-            # Build canonical string
             decomp_latex = " \\times ".join([f"{p}^{{{exp}}}" if exp > 1 else f"{p}" for p, exp in sorted(factors.items())])
             st.markdown(f"### $${n} = {decomp_latex}$$")
 
             with st.expander("🔬 Structural Divisor & Totient Breakdown", expanded=True):
-                # Calculate number of divisors: prod(exp + 1)
                 num_divisors = 1
                 for exp in factors.values():
                     num_divisors *= (exp + 1)
 
-                # Calculate Euler's totient: n * prod(1 - 1/p)
                 phi_val = n
                 for p in factors.keys():
                     phi_val = (phi_val * (p - 1)) // p
@@ -682,8 +645,6 @@ with tab_comb:
     </div>
     """, unsafe_allow_html=True)
 
-    import math
-
     col1, col2 = st.columns(2)
     n_param = col1.number_input("Total Elements (n)", min_value=0, max_value=30, value=5, step=1)
     r_param = col2.number_input("Selected Elements / Bins (r)", min_value=0, max_value=30, value=4, step=1)
@@ -709,7 +670,6 @@ with tab_comb:
     col_left, col_right = st.columns(2)
 
     with col_left:
-        # 1. Permutations Breakdown
         with st.expander("🔹 **Permutations** $P(n, r)$: Order Matters", expanded=True):
             st.markdown(f"""
             * **Concept:** The number of ordered arrangements of $r$ distinct items chosen from a pool of $n$.
@@ -717,10 +677,9 @@ with tab_comb:
               $$P(n, r) = \\frac{{n!}}{{(n - r)!}}$$
             * **Calculation for $n = {n}, r = {r}$:**
               $$P({n}, {r}) = \\frac{{{n}!}}{{({n} - {r})!}} = \\frac{{{math.factorial(n)}}}{{{math.factorial(max(0, n - r))}}} = \\mathbf{{{p:,}}}$$
-            * **Intuition:** Think of assigning distinct positions or rank (e.g., 1st, 2nd, 3rd place podium finishes among {n} competitors).
+            * **Intuition:** Assigning distinct positions or rank (e.g., 1st, 2nd, 3rd place podium finishes among {n} competitors).
             """)
 
-        # 3. Derangements Breakdown
         with st.expander("🔹 **Derangements** $!n$: Zero Fixed Points", expanded=True):
             st.markdown(f"""
             * **Concept:** Permutations of $n$ items such that **no item appears in its original position**.
@@ -732,7 +691,6 @@ with tab_comb:
             """)
 
     with col_right:
-        # 2. Combinations Breakdown
         with st.expander("🔹 **Combinations** $C(n, r)$: Order Does Not Matter", expanded=True):
             st.markdown(f"""
             * **Concept:** The number of unordered subsets of $r$ items selected from a collection of $n$.
@@ -743,7 +701,6 @@ with tab_comb:
             * **Intuition:** Choosing a team or committee of {r} members from a group of {n} candidates (the order they are picked does not create a new team).
             """)
 
-        # 4. Stars & Bars Breakdown
         with st.expander("🔹 **Stars & Bars**: Partitions into Bins", expanded=True):
             st.markdown(f"""
             * **Concept:** Distributing $n$ **indistinguishable** items into $r$ **distinguishable** bins (or finding non-negative integer solutions to $x_1 + x_2 + \\dots + x_r = n$).
