@@ -6,7 +6,7 @@ def extract_variables(expr: str) -> list[str]:
     """Finds all distinct uppercase propositional variables (e.g., P, Q, R)."""
     return sorted(list(set(re.findall(r"\b[A-Z]\b", expr))))
 
-def generate_truth_table(expression: str):
+def truth_table(expression: str):
     """Evaluates a boolean proposition across all True/False assignments."""
     variables = extract_variables(expression)
     rows = []
