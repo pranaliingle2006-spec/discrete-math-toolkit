@@ -332,17 +332,17 @@ with tab_num:
 
     calc = st.selectbox("Select Technique", ["Extended Euclidean Algorithm & Inverse", "Chinese Remainder Theorem", "Prime Factorization"])
 
-if calc == "Extended Euclidean Algorithm & Inverse":
+    if calc == "Extended Euclidean Algorithm & Inverse":
         c1, c2 = st.columns(2)
         a_val = c1.number_input("Integer a", value=17, step=1)
         m_val = c2.number_input("Modulus m", value=43, step=1)
-        
+
         if st.button("Calculate Modular Inverse"):
             try:
                 g, x, y = extended_gcd(int(a_val), int(m_val))
                 inv = mod_inverse(int(a_val), int(m_val))
                 proof_mod = (int(a_val) * int(inv)) % int(m_val)
-                
+
                 st.markdown(f"""
                 ### Step-by-Step Bézout Solution:
                 * $\\gcd({a_val}, {m_val}) = {g}$
@@ -358,13 +358,13 @@ if calc == "Extended Euclidean Algorithm & Inverse":
         c1, c2 = st.columns(2)
         r_in = c1.text_input("Remainders $r_i$ (comma-separated)", "2, 3, 2")
         m_in = c2.text_input("Moduli $m_i$ (pairwise coprime)", "3, 5, 7")
-        
+
         if st.button("Solve System"):
             try:
                 r_vals = [int(x.strip()) for x in r_in.split(",")]
                 m_vals = [int(x.strip()) for x in m_in.split(",")]
                 ans, total_mod = crt(r_vals, m_vals)
-                
+
                 st.success(f"Unique Solution modulo $M = {total_mod}$:")
                 st.markdown(f"### $$x \\equiv {ans} \\pmod{{{total_mod}}}$$")
             except Exception as e:
