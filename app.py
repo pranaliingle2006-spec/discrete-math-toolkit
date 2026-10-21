@@ -352,7 +352,7 @@ with tab_crypto:
                 st.markdown(f"""
                 #### Key Mathematical Inversion
                 * **Encryption Key:** $a = {a_key}, \\; b = {b_key}$
-                * **Decryption Key $a^{{-1}} \\pmod{{26}}$:** $({a_key} \\times {a_inv}) \\pmod{{26}} = {(int(a_key) * a_inv) \% 26} \\implies \\mathbf{{a^{{-1}} = {a_inv}}}$
+                * **Decryption Key $a^{{-1}} \\pmod{{26}}$:** $({a_key} \\times {a_inv}) \\pmod{{26}} = {(int(a_key) * a_inv) % 26} \\implies \\mathbf{{a^{{-1}} = {a_inv}}}$
                 * **Decryption Formula:** 
                   $$D(y) = a^{{-1}}(y - b) \\pmod{{26}} = {a_inv}(y - {b_key}) \\pmod{{26}}$$
                 """)
