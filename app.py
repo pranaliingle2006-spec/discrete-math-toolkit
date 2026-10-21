@@ -510,7 +510,7 @@ with tab_num:
                     * **Bézout coefficient for $m$ ($y$):** `{y}`
                     """)
 
-                    if g == 1:
+                if g == 1:
                     status_label = "✅ Correct (Identity holds)" if proof_val == 1 else "❌ Error"
                     st.markdown(f"""
                     #### Phase 3: Modular Inverse Derivation
@@ -521,7 +521,7 @@ with tab_num:
 
                     #### Phase 4: Verification Check
                     $$({a_int} \\times {inv}) = {a_int * inv}$$
-                    $$({a_int * inv}) \\pmod{{{m_int}}} = \\mathbf{{{proof_val}}} \\quad \\text{{{status\_label}}}$$
+                    $$({a_int * inv}) \\pmod{{{m_int}}} = \\mathbf{{{proof_val}}} \\quad \\text{{{status_label}}}$$
                     """)
                 else:
                     st.info(f"Since $\\gcd({a_int}, {m_int}) = {g} > 1$, $a$ and $m$ share a common factor. No integer $x$ can satisfy $a \\cdot x \\equiv 1 \\pmod m$.")
