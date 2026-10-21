@@ -1,3 +1,10 @@
+streamlit
+pandas
+pyvis
+typer>=0.9.0
+rich>=13.0.0
+pytest
+
 altair==6.0.0
 annotated-doc==0.0.5
 annotated-types==0.8.0
