@@ -104,6 +104,27 @@ class Graph:
             return False
         return len(self.connected_components()) == 1 and not self.has_cycle()
 
+    def is_bipartite(self) -> tuple[bool, dict[str, int]]:
+        """
+        Tests if the graph is bipartite using 2-coloring BFS.
+        Returns (is_bipartite, color_map) where colors are 0 and 1.
+        """
+        color = {}
+        for start_node in self.nodes:
+            if start_node not in color:
+                color[start_node] = 0
+                queue = deque([start_node])
+                while queue:
+                    u = queue.popleft()
+                    for v in self.adj[u]:
+                        if v not in color:
+                            color[v] = 1 - color[u]
+                            queue.append(v)
+                        elif color[v] == color[u]:
+                            # Adjacent vertices share the same color -> odd cycle exists
+                            return False, {}
+        return True, color
+
     def visualize_to_html(self, filename: str = "graph_visualization.html", open_browser: bool = True):
         from pyvis.network import Network
 
