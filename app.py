@@ -282,30 +282,55 @@ with tab_crypto:
                 st.code(f"{cipher_tokens}", language="python")
                 st.success(f"**Verified Decrypted Output:** `{decrypted_msg}`")
 
-        # Step-by-Step Character Transformation Table
+        
+        # Step-by-Step Character Transformation Walkthrough
         if plain_msg:
             st.markdown("---")
-            with st.expander("🔬 Step-by-Step Character-by-Character Computation Table", expanded=True):
+            with st.expander("🔬 Step-by-Step Encryption & Decryption Breakdown", expanded=True):
+                st.write("RSA encrypts and decrypts each character by transforming it between letters, ASCII numbers, and modular cipher tokens.")
+                
+                # 1. Clean, human-readable summary table
                 char_steps = []
                 for ch, c_val in zip(plain_msg, cipher_tokens):
                     m_ord = ord(ch)
                     recovered_ord = pow(c_val, d, n)
                     recovered_ch = chr(recovered_ord)
                     char_steps.append({
-                        "Char": ch,
-                        "ASCII M": m_ord,
-                        "Encryption C = M^e mod n": f"{m_ord}^{{{e}}} mod {n} = {c_val}",
-                        "Cipher Token C": c_val,
-                        "Decryption M = C^d mod n": f"{c_val}^{{{d}}} mod {n} = {recovered_ord}",
-                        "Recovered Char": recovered_ch
+                        "Plain Character": f"'{ch}'",
+                        "ASCII Value (M)": m_ord,
+                        "Public Exponent (e)": e,
+                        "Modulus (n)": n,
+                        "Encrypted Token (C)": c_val,
+                        "Private Key (d)": d,
+                        "Decrypted ASCII": recovered_ord,
+                        "Recovered Character": f"'{recovered_ch}'"
                     })
-                st.table(pd.DataFrame(char_steps))
+                
+                st.dataframe(pd.DataFrame(char_steps), use_container_width=True)
 
-                st.info("""
-                **Why does decryption work?**  
-                By **Euler's Totient Theorem**, since $e \\cdot d \\equiv 1 \\pmod{\\phi(n)}$, there exists an integer $k$ such that $e \\cdot d = 1 + k \\cdot \\phi(n)$.  
-                Therefore:  
-                $$C^d \\equiv (M^e)^d = M^{e \\cdot d} = M^{1 + k \\cdot \\phi(n)} = M \\cdot (M^{\\phi(n)})^k \\equiv M \\cdot (1)^k \\equiv M \\pmod n$$
+                # 2. Detailed pedagogical walk-through of the first letter
+                first_ch = plain_msg[0]
+                first_m = ord(first_ch)
+                first_c = cipher_tokens[0]
+                first_rec = pow(first_c, d, n)
+
+                st.markdown(f"""
+                ### 📖 Example Walkthrough: Encrypting & Decrypting the letter `'{first_ch}'`
+                
+                1. **Step 1: Convert Letter to Number (ASCII):**
+                   * The computer represents `'{first_ch}'` as integer **$M = {first_m}$**.
+                
+                2. **Step 2: Lock / Encrypt with Public Key $(e = {e}, n = {n})$:**
+                   * Formula: $C = M^e \\pmod n$
+                   * Math: ${first_m}^{{{e}}} \\pmod{{{n}}} = \\mathbf{{{first_c}}}$
+                   * The number **`{first_c}`** is the secret cipher token sent across the wire.
+                
+                3. **Step 3: Unlock / Decrypt with Private Key $(d = {d}, n = {n})$:**
+                   * Formula: $M = C^d \\pmod n$
+                   * Math: ${first_c}^{{{d}}} \\pmod{{{n}}} = \\mathbf{{{first_rec}}}$
+                
+                4. **Step 4: Convert Number Back to Character:**
+                   * The integer **${first_rec}$** is converted back to ASCII: **`'{chr(first_rec)}'`** ✅
                 """)
 
     # 2. Affine Cipher
