@@ -412,31 +412,89 @@ with tab_num:
 # -------------------------------------------------------------
 # 5. COMBINATORICS ENGINE
 # -------------------------------------------------------------
+# -------------------------------------------------------------
+# 5. COMBINATORICS ENGINE
+# -------------------------------------------------------------
 with tab_comb:
     st.markdown("""
     <div class="edu-card">
         <span class="edu-badge">Module: Counting & Combinatorics</span>
         <h4 style="margin: 0; color: #c0caf5;">Combinatorial Distributions & Derangements</h4>
         <p style="color: #9aa5ce; font-size: 0.95rem; margin-top: 6px;">
-            Calculate permutations, combinations, partitions (Stars and Bars), and fixed-point-free permutations ($!n$).
+            Explore the algebraic foundations of counting: arrangements where order matters, unordered selections, fixed-point-free permutations, and partitioning identical items.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
-    n_param = col1.number_input("Total Elements (n)", min_value=0, max_value=60, value=6, step=1)
-    r_param = col2.number_input("Selected Elements / Bins (r)", min_value=0, max_value=60, value=3, step=1)
+    n_param = col1.number_input("Total Elements (n)", min_value=0, max_value=30, value=5, step=1)
+    r_param = col2.number_input("Selected Elements / Bins (r)", min_value=0, max_value=30, value=4, step=1)
 
-    p = permutations(int(n_param), int(r_param))
-    c = combinations(int(n_param), int(r_param))
-    d = derangements(int(n_param))
-    sb = stars_and_bars(int(n_param), int(r_param))
+    n = int(n_param)
+    r = int(r_param)
 
+    p = permutations(n, r)
+    c = combinations(n, r)
+    d = derangements(n)
+    sb = stars_and_bars(n, r)
+
+    # Top summary metrics
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric(f"Permutations P({n_param}, {r_param})", f"{p:,}")
-    m2.metric(f"Combinations C({n_param}, {r_param})", f"{c:,}")
-    m3.metric(f"Derangements !{n_param}", f"{d:,}")
+    m1.metric(f"Permutations P({n}, {r})", f"{p:,}")
+    m2.metric(f"Combinations C({n}, {r})", f"{c:,}")
+    m3.metric(f"Derangements !{n}", f"{d:,}")
     m4.metric(f"Stars & Bars", f"{sb:,}")
+
+    st.markdown("---")
+    st.subheader("📚 Concept Explanations & Step-by-Step Proofs")
+
+    col_left, col_right = st.columns(2)
+
+    with col_left:
+        # 1. Permutations Breakdown
+        with st.expander("🔹 **Permutations** $P(n, r)$: Order Matters", expanded=True):
+            st.markdown(f"""
+            * **Concept:** The number of ordered arrangements of $r$ distinct items chosen from a pool of $n$.
+            * **Formula:** 
+              $$P(n, r) = \\frac{{n!}}{{(n - r)!}}$$
+            * **Calculation for $n = {n}, r = {r}$:**
+              $$P({n}, {r}) = \\frac{{{n}!}}{{({n} - {r})!}} = \\frac{{{math.factorial(n)}}}{{{math.factorial(max(0, n - r))}}} = \\mathbf{{{p:,}}}$$
+            * **Intuition:** Think of assigning distinct positions or rank (e.g., 1st, 2nd, 3rd place podium finishes among {n} competitors).
+            """)
+
+        # 3. Derangements Breakdown
+        with st.expander("🔹 **Derangements** $!n$: Zero Fixed Points", expanded=True):
+            st.markdown(f"""
+            * **Concept:** Permutations of $n$ items such that **no item appears in its original position**.
+            * **Recursive Formula:** 
+              $$!n = (n - 1)(!(n - 1) + !(n - 2)) \\quad \\text{{with }} !0 = 1, !1 = 0$$
+            * **Summation Formula:**
+              $$!{n} = {n}! \\sum_{{k=0}}^{{{n}}} \\frac{{(-1)^k}}{{k!}} = \\mathbf{{{d:,}}}$$
+            * **Intuition:** The "Secret Santa" problem: {n} people put their names in a hat and draw one out; $!{n}$ is the number of ways nobody draws their own name.
+            """)
+
+    with col_right:
+        # 2. Combinations Breakdown
+        with st.expander("🔹 **Combinations** $C(n, r)$: Order Does Not Matter", expanded=True):
+            st.markdown(f"""
+            * **Concept:** The number of unordered subsets of $r$ items selected from a collection of $n$.
+            * **Formula:** 
+              $$C(n, r) = \\binom{{n}}{{r}} = \\frac{{n!}}{{r!(n - r)!}}$$
+            * **Calculation for $n = {n}, r = {r}$:**
+              $$C({n}, {r}) = \\frac{{{n}!}}{{{r}! \\cdot ({n} - {r})!}} = \\frac{{{math.factorial(n)}}}{{{math.factorial(r)} \\times {math.factorial(max(0, n - r))}}} = \\mathbf{{{c:,}}}$$
+            * **Intuition:** Choosing a team or committee of {r} members from a group of {n} candidates (the order they are picked does not create a new team).
+            """)
+
+        # 4. Stars & Bars Breakdown
+        with st.expander("🔹 **Stars & Bars**: Partitions into Bins", expanded=True):
+            st.markdown(f"""
+            * **Concept:** Distributing $n$ **indistinguishable** items into $r$ **distinguishable** bins (or finding non-negative integer solutions to $x_1 + x_2 + \\dots + x_r = n$).
+            * **Formula:** 
+              $$\\binom{{n + r - 1}}{{r - 1}}$$
+            * **Calculation for $n = {n}, r = {r}$:**
+              $$\\binom{{{n} + {r} - 1}}{{{r} - 1}} = \\binom{{{n + r - 1}}}{{{r - 1}}} = \\mathbf{{{sb:,}}}$$
+            * **Intuition:** Placing {r - 1} dividers ("bars") between {n} identical tokens ("stars") to divide them among {r} recipients.
+            """)
 
 # -------------------------------------------------------------
 # 6. SESSION AUDIT LOG
