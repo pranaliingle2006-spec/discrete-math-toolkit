@@ -18,10 +18,10 @@ def arrangements_with_repetition(n: int, r: int) -> int:
     return n ** r
 
 def combinations_with_repetition(n: int, r: int) -> int:
-    """Stars and bars: C(n + r - 1, r)."""
-    if n <= 0 or r < 0:
+    """Stars and bars: C(n + r - 1, r - 1)."""
+    if n < 0 or r <= 0:
         return 0
-    return math.comb(n + r - 1, r)
+    return math.comb(n + r - 1, r - 1)
 
 def balls_and_bins(balls: int, bins: int, distinguishable_balls: bool = False, distinguishable_bins: bool = True) -> int:
     """
@@ -70,3 +70,9 @@ def pigeonhole_min_capacity(items: int, containers: int) -> int:
 def inclusion_exclusion_2sets(size_a: int, size_b: int, size_intersection: int) -> int:
     """|A U B| = |A| + |B| - |A ∩ B|"""
     return size_a + size_b - size_intersection
+
+# --- ALIASES MATCHING APP.PY IMPORTS ---
+permutations = permutations_count
+combinations = combinations_count
+derangements = derangements_count
+stars_and_bars = combinations_with_repetition
