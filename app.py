@@ -521,7 +521,18 @@ with tab_num:
 
                         #### Phase 4: Verification Check
                         $$({a_int} \\times {inv}) = {a_int * inv}$$
-                        $$({a_int * inv}) \\pmod{{{m_int}}} = \\mathbf{{{proof_val}}} \\quad \\text{{{'✅ Correct (Identity holds)' if proof\_val == 1 else '❌ Error' }}}$$
+                        status_label = "✅ Correct (Identity holds)" if proof_val == 1 else "❌ Error"
+                        st.markdown(f"""
+                        #### Phase 3: Modular Inverse Derivation
+                        Modulo ${m_int}$, the term $({m_int})({y}) \\equiv 0 \\pmod{{{m_int}}}$. Therefore:
+                        $$({a_int})({x}) \\equiv 1 \\pmod{{{m_int}}}$$
+                        Because $x = {x}$ may be negative, we compute the canonical representative:
+                        $$x \\pmod{{{m_int}}} = {x} \\pmod{{{m_int}}} = \\mathbf{{{inv}}}$$
+
+                        #### Phase 4: Verification Check
+                        $$({a_int} \\times {inv}) = {a_int * inv}$$
+                        $$({a_int * inv}) \\pmod{{{m_int}}} = \\mathbf{{{proof_val}}} \\quad \\text{{{status_label}}}$$
+                        """)
                         """)
                     else:
                         st.info(f"Since $\\gcd({a_int}, {m_int}) = {g} > 1$, $a$ and $m$ share a common factor. No integer $x$ can satisfy $a \\cdot x \\equiv 1 \\pmod m$.")
