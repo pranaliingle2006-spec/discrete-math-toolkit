@@ -265,9 +265,9 @@ with tab_graph:
                   1. **Connectivity Check:** {'✅ Satisfied (1 component)' if len(comps) == 1 else '❌ Failed (Disconnected)'}
                   2. **Acyclic Check:** {'✅ Satisfied (No cycles)' if not has_cyc else '❌ Failed (Contains cycles)'}
                   3. **Euler Characteristic ($|E| = |V| - 1$):**
-                     * $\vert{}V\vert{} = {len(g.nodes)}$
-                     * $\vert{}E\vert{} = {len(g.edges)}$
-                     * $\vert{}E\vert{} = \vert{}V\vert{} - 1 \implies {len(g.edges)} = {len(g.nodes) - 1}$ {'✅ Holds' if len(g.edges) == len(g.nodes) - 1 else '❌ Does not hold'}
+                     * $|V| = {len(g.nodes)}$
+                     * $|E| = {len(g.edges)}$
+                     * $|E| = |V| - 1 \implies {len(g.edges)} = {len(g.nodes) - 1}$ {'✅ Holds' if len(g.edges) == len(g.nodes) - 1 else '❌ Does not hold'}
                 """)
 
             with st.expander("📊 4. Adjacency Matrix $A(G)$", expanded=True):
