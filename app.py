@@ -171,57 +171,64 @@ with tab_graph:
         is_directed = st.toggle("Directed Network", value=False)
         render_btn = st.button("Analyze & Render Graph", type="primary")
 
+    # Safe defaults to prevent NameError
+    g = None
+    is_bip = False
+    color_map = {}
+    comps = []
+    has_cyc = False
+    is_tr = False
+    nodes_list = []
+    adj_mat = []
+
+    if edge_input.strip():
+        try:
+            edges = ast.literal_eval(edge_input)
+            g = Graph(directed=is_directed)
+            for u, v in edges:
+                g.add_edge(str(u), str(v))
+
+            nodes_list, adj_mat = g.get_adjacency_matrix()
+            comps = g.connected_components()
+            has_cyc = g.has_cycle()
+            is_tr = g.is_tree()
+            is_bip, color_map = g.is_bipartite()
+        except Exception as e:
+            st.error(f"Error parsing graph structure: {e}")
+
     with col_view:
-        if render_btn or edge_input:
+        if g and g.nodes:
+            # Metric Cards HUD
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Vertices |V|", len(g.nodes))
+            m2.metric("Edges |E|", len(g.edges))
+            m3.metric("Components", len(comps))
+            m4.metric("Bipartite?", "Yes ✅" if is_bip else "No ❌")
+
+            # Interactive Pyvis Canvas with Bipartite Color Coding
             try:
-                edges = ast.literal_eval(edge_input)
-                g = Graph(directed=is_directed)
-                for u, v in edges:
-                    g.add_edge(str(u), str(v))
+                from pyvis.network import Network
+                net = Network(height="320px", width="100%", bgcolor="#0e0f18", font_color="#c0caf5")
+                
+                for node in g.nodes:
+                    if is_bip and node in color_map:
+                        node_color = "#7aa2f7" if color_map[node] == 0 else "#f7768e"
+                    else:
+                        node_color = "#bb9af7"
+                    net.add_node(node, label=f"V: {node}", color=node_color, size=18)
 
-                nodes_list, adj_mat = g.get_adjacency_matrix()
-                comps = g.connected_components()
-                has_cyc = g.has_cycle()
-                is_tr = g.is_tree()
-                is_bip, color_map = g.is_bipartite()
+                for u, v in g.edges:
+                    net.add_edge(u, v, color="#565f89")
+                
+                html_path = "temp_graph.html"
+                net.save_graph(html_path)
+                with open(html_path, "r", encoding="utf-8") as f:
+                    st.components.v1.html(f.read(), height=340)
+            except Exception as pyvis_err:
+                st.info(f"Pyvis render preview: {pyvis_err}")
 
-                # Metric Cards HUD
-                m1, m2, m3, m4 = st.columns(4)
-                m1.metric("Vertices |V|", len(g.nodes))
-                m2.metric("Edges |E|", len(g.edges))
-                m3.metric("Components", len(comps))
-                m4.metric("Bipartite?", "Yes ✅" if is_bip else "No ❌")
-
-                # Interactive Pyvis Canvas with Bipartite Color Coding
-                try:
-                    from pyvis.network import Network
-                    net = Network(height="320px", width="100%", bgcolor="#0e0f18", font_color="#c0caf5")
-                    
-                    for node in g.nodes:
-                        # Color nodes by 2-color partition if bipartite
-                        if is_bip and node in color_map:
-                            node_color = "#7aa2f7" if color_map[node] == 0 else "#f7768e"
-                        else:
-                            node_color = "#bb9af7"
-                        net.add_node(node, label=f"V: {node}", color=node_color, size=18)
-
-                    for u, v in g.edges:
-                        net.add_edge(u, v, color="#565f89")
-                    
-                    html_path = "temp_graph.html"
-                    net.save_graph(html_path)
-                    with open(html_path, "r", encoding="utf-8") as f:
-                        st.components.v1.html(f.read(), height=340)
-                except Exception as pyvis_err:
-                    st.info(f"Pyvis render preview: {pyvis_err}")
-
-            except Exception as e:
-                st.error(f"Error parsing graph structure: {e}")
-
-    # ---------------------------------------------------------
-    # PEDAGOGICAL BREAKDOWNS & THEORETICAL VERIFICATIONS
-    # ---------------------------------------------------------
-    if 'g' in locals() and g.nodes:
+    # Theoretical Explanations and Proofs
+    if g and g.nodes:
         st.markdown("---")
         st.subheader("🔬 Deep Graph Analysis & Theoretical Proofs")
         
@@ -264,17 +271,16 @@ with tab_graph:
                 * **Tree Conditions Verification:**
                   1. **Connectivity Check:** {'✅ Satisfied (1 component)' if len(comps) == 1 else '❌ Failed (Disconnected)'}
                   2. **Acyclic Check:** {'✅ Satisfied (No cycles)' if not has_cyc else '❌ Failed (Contains cycles)'}
-                  3. **Euler Characteristic ($|E| = |V| - 1$):**
-                     * $|V| = {len(g.nodes)}$
-                     * $|E| = {len(g.edges)}$
-                     * $|E| = |V| - 1 \implies {len(g.edges)} = {len(g.nodes) - 1}$ {'✅ Holds' if len(g.edges) == len(g.nodes) - 1 else '❌ Does not hold'}
+                  3. **Euler Characteristic ($\vert{}E\vert{} = \vert{}V\vert{} - 1$):**
+                     * $\vert{}V\vert{} = {len(g.nodes)}$
+                     * $\vert{}E\vert{} = {len(g.edges)}$
+                     * $\vert{}E\vert{} = \vert{}V\vert{} - 1 \implies {len(g.edges)} = {len(g.nodes) - 1}$ {'✅ Holds' if len(g.edges) == len(g.nodes) - 1 else '❌ Does not hold'}
                 """)
 
             with st.expander("📊 4. Adjacency Matrix $A(G)$", expanded=True):
                 st.markdown("The matrix entry $A_{i,j} = 1$ if vertex $v_i$ is adjacent to $v_j$, and $0$ otherwise:")
                 df_mat = pd.DataFrame(adj_mat, index=nodes_list, columns=nodes_list)
                 st.dataframe(df_mat, use_container_width=True)
-
 # -------------------------------------------------------------
 # 2. RSA & CRYPTOGRAPHY LAB
 # -------------------------------------------------------------
