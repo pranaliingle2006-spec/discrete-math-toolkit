@@ -182,7 +182,6 @@ with tab_graph:
                 has_cyc = g.has_cycle()
                 is_tr = g.is_tree()
 
-                # Metrics HUD
                 m1, m2, m3 = st.columns(3)
                 m1.metric("Vertices |V|", len(g.nodes))
                 m2.metric("Edges |E|", len(g.edges))
@@ -194,7 +193,6 @@ with tab_graph:
                     df_mat = pd.DataFrame(adj_mat, index=nodes_list, columns=nodes_list)
                     st.dataframe(df_mat, use_container_width=True)
 
-                # Pyvis Visualization rendering
                 try:
                     from pyvis.network import Network
                     net = Network(height="340px", width="100%", bgcolor="#0e0f18", font_color="#c0caf5")
@@ -208,7 +206,7 @@ with tab_graph:
                     with open(html_path, "r", encoding="utf-8") as f:
                         st.components.v1.html(f.read(), height=360)
                 except Exception as pyvis_err:
-                    st.info(f"Interactive Pyvis render preview: {pyvis_err}")
+                    st.info(f"Pyvis preview: {pyvis_err}")
 
             except Exception as e:
                 st.error(f"Error parsing graph structure: {e}")
@@ -229,7 +227,6 @@ with tab_crypto:
 
     crypto_mode = st.radio("Select Cryptosystem", ["RSA Public-Key Cryptosystem", "Affine Substitution Cipher"], horizontal=True)
 
-    # 1. RSA
     if crypto_mode == "RSA Public-Key Cryptosystem":
         if "rsa_keys" not in st.session_state:
             st.session_state.rsa_keys = generate_rsa_keys()
@@ -282,14 +279,11 @@ with tab_crypto:
                 st.code(f"{cipher_tokens}", language="python")
                 st.success(f"**Verified Decrypted Output:** `{decrypted_msg}`")
 
-        
-        # Step-by-Step Character Transformation Walkthrough
         if plain_msg:
             st.markdown("---")
             with st.expander("🔬 Step-by-Step Encryption & Decryption Breakdown", expanded=True):
                 st.write("RSA encrypts and decrypts each character by transforming it between letters, ASCII numbers, and modular cipher tokens.")
                 
-                # 1. Clean, human-readable summary table
                 char_steps = []
                 for ch, c_val in zip(plain_msg, cipher_tokens):
                     m_ord = ord(ch)
@@ -308,7 +302,6 @@ with tab_crypto:
                 
                 st.dataframe(pd.DataFrame(char_steps), use_container_width=True)
 
-                # 2. Detailed pedagogical walk-through of the first letter
                 first_ch = plain_msg[0]
                 first_m = ord(first_ch)
                 first_c = cipher_tokens[0]
@@ -333,7 +326,6 @@ with tab_crypto:
                    * The integer **${first_rec}$** is converted back to ASCII: **`'{chr(first_rec)}'`** ✅
                 """)
 
-    # 2. Affine Cipher
     else:
         st.subheader("Affine Cipher: $E(x) = (a \\cdot x + b) \\pmod{26}$")
         col_a, col_b, col_t = st.columns(3)
@@ -682,7 +674,6 @@ with tab_comb:
     d = derangements(n)
     sb = stars_and_bars(n, r)
 
-    # Top summary metrics
     m1, m2, m3, m4 = st.columns(4)
     m1.metric(f"Permutations P({n}, {r})", f"{p:,}")
     m2.metric(f"Combinations C({n}, {r})", f"{c:,}")
