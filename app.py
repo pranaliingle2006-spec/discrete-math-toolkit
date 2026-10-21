@@ -353,68 +353,227 @@ with tab_logic:
 # -------------------------------------------------------------
 # 4. NUMBER THEORY & CRT
 # -------------------------------------------------------------
+
 with tab_num:
     st.markdown("""
     <div class="edu-card">
         <span class="edu-badge">Module: Number Theory</span>
         <h4 style="margin: 0; color: #c0caf5;">Modular Arithmetic & The Chinese Remainder Theorem</h4>
         <p style="color: #9aa5ce; font-size: 0.95rem; margin-top: 6px;">
-            Compute Bézout coefficients, coprime modular inverses, and simultaneous modular congruences.
+            Interactive proofs for Bézout's Identity, modular inverses, simultaneous linear congruences, and prime decompositions.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    calc = st.selectbox("Select Technique", ["Extended Euclidean Algorithm & Inverse", "Chinese Remainder Theorem", "Prime Factorization"])
+    calc = st.selectbox("Select Technique", [
+        "Extended Euclidean Algorithm & Inverse", 
+        "Chinese Remainder Theorem", 
+        "Prime Factorization & Divisor Analysis"
+    ])
 
+    # ---------------------------------------------------------
+    # 1. EXTENDED EUCLIDEAN ALGORITHM & MODULAR INVERSE
+    # ---------------------------------------------------------
     if calc == "Extended Euclidean Algorithm & Inverse":
+        st.write("Find $\\gcd(a, m)$, compute Bézout coefficients $x, y$ such that $a \\cdot x + m \\cdot y = \\gcd(a, m)$, and determine the modular multiplicative inverse $a^{-1} \\pmod m$.")
         c1, c2 = st.columns(2)
         a_val = c1.number_input("Integer a", value=17, step=1)
-        m_val = c2.number_input("Modulus m", value=43, step=1)
+        m_val = c2.number_input("Modulus m", value=43, step=1, min_value=2)
 
-        if st.button("Calculate Modular Inverse"):
+        if st.button("Compute Step-by-Step Solution", type="primary"):
             try:
-                g, x, y = extended_gcd(int(a_val), int(m_val))
-                inv = mod_inverse(int(a_val), int(m_val))
-                proof_mod = (int(a_val) * int(inv)) % int(m_val)
+                a_int = int(a_val)
+                m_int = int(m_val)
 
-                st.markdown(f"""
-                ### Step-by-Step Bézout Solution:
-                * $\\gcd({a_val}, {m_val}) = {g}$
-                * Bézout's Identity: $({a_val})({x}) + ({m_val})({y}) = {g}$
-                * Modular Multiplicative Inverse: **$a^{{-1}} \\equiv {inv} \\pmod{{{m_val}}}$**
-                * Proof: $({a_val} \\times {inv}) \\pmod{{{m_val}}} = {proof_mod}$
-                """)
+                # Trace Euclidean steps
+                steps = []
+                temp_a, temp_b = a_int, m_int
+                while temp_b != 0:
+                    q = temp_a // temp_b
+                    r = temp_a % temp_b
+                    steps.append({"Dividend": temp_a, "Divisor": temp_b, "Quotient": q, "Remainder": r})
+                    temp_a, temp_b = temp_b, r
+
+                g, x, y = extended_gcd(a_int, m_int)
+
+                if g == 1:
+                    inv = mod_inverse(a_int, m_int)
+                    st.success(f"### Unique Modular Inverse: $a^{{-1}} \\equiv {inv} \\pmod{{{m_int}}}$")
+                else:
+                    inv = None
+                    st.error(f"### Modular Inverse Does Not Exist ($\\gcd({a_int}, {m_int}) = {g} \\neq 1$)")
+
+                with st.expander("📝 Step-by-Step Proof & Division Table", expanded=True):
+                    st.markdown("#### Phase 1: Forward Euclidean Division Steps")
+                    st.table(pd.DataFrame(steps))
+
+                    st.markdown(f"""
+                    #### Phase 2: Bézout's Identity Formulation
+                    By reversing the Euclidean steps, integers $x$ and $y$ can be expressed such that:
+                    $$({a_int})({x}) + ({m_int})({y}) = \\gcd({a_int}, {m_int}) = {g}$$
+                    * **Bézout coefficient for $a$ ($x$):** `{x}`
+                    * **Bézout coefficient for $m$ ($y$):** `{y}`
+                    """)
+
+                    if g == 1:
+                        proof_val = (a_int * inv) % m_int
+                        st.markdown(f"""
+                        #### Phase 3: Modular Inverse Derivation
+                        Modulo ${m_int}$, the term $({m_int})({y}) \\equiv 0 \\pmod{{{m_int}}}$. Therefore:
+                        $$({a_int})({x}) \\equiv 1 \\pmod{{{m_int}}}$$
+                        Because $x = {x}$ may be negative, we compute the canonical representative:
+                        $$x \\pmod{{{m_int}}} = {x} \\pmod{{{m_int}}} = \\mathbf{{{inv}}}$$
+
+                        #### Phase 4: Verification Check
+                        $$({a_int} \\times {inv}) = {a_int * inv}$$
+                        $$({a_int * inv}) \\pmod{{{m_int}}} = \\mathbf{{{proof_val}}} \\quad \\text{{{'✅ Correct (Identity holds)' if proof\_val == 1 else '❌ Error' }}}$$
+                        """)
+                    else:
+                        st.info(f"Since $\\gcd({a_int}, {m_int}) = {g} > 1$, $a$ and $m$ share a common factor. No integer $x$ can satisfy $a \\cdot x \\equiv 1 \\pmod m$.")
+
             except Exception as e:
                 st.error(f"Calculation Error: {e}")
 
+    # ---------------------------------------------------------
+    # 2. CHINESE REMAINDER THEOREM (CRT)
+    # ---------------------------------------------------------
     elif calc == "Chinese Remainder Theorem":
-        st.write("Solve systems of congruences: $x \\equiv r_i \\pmod{m_i}$")
+        st.write("Solve simultaneous modular systems: $x \\equiv r_i \\pmod{m_i}$ where all moduli $m_i$ are pairwise coprime.")
         c1, c2 = st.columns(2)
         r_in = c1.text_input("Remainders $r_i$ (comma-separated)", "2, 3, 2")
         m_in = c2.text_input("Moduli $m_i$ (pairwise coprime)", "3, 5, 7")
 
-        if st.button("Solve System"):
+        if st.button("Solve System Step-by-Step", type="primary"):
             try:
-                r_vals = [int(x.strip()) for x in r_in.split(",")]
-                m_vals = [int(x.strip()) for x in m_in.split(",")]
-                ans, total_mod = crt(r_vals, m_vals)
+                r_vals = [int(x.strip()) for x in r_in.split(",") if x.strip()]
+                m_vals = [int(x.strip()) for x in m_in.split(",") if x.strip()]
 
-                st.success(f"Unique Solution modulo $M = {total_mod}$:")
-                st.markdown(f"### $$x \\equiv {ans} \\pmod{{{total_mod}}}$$")
+                if len(r_vals) != len(m_vals):
+                    st.error("The count of remainders must equal the count of moduli.")
+                elif len(r_vals) == 0:
+                    st.error("Please enter at least one congruence.")
+                else:
+                    k = len(m_vals)
+                    import math
+                    
+                    # 1. Pairwise Coprimality Verification
+                    not_coprime = []
+                    for i in range(k):
+                        for j in range(i + 1, k):
+                            if math.gcd(m_vals[i], m_vals[j]) != 1:
+                                not_coprime.append(f"gcd({m_vals[i]}, {m_vals[j]}) = {math.gcd(m_vals[i], m_vals[j])}")
+
+                    if not_coprime:
+                        st.error(f"The moduli are not pairwise coprime! CRT requires $\\gcd(m_i, m_j) = 1$. Conflicts: {', '.join(not_coprime)}")
+                    else:
+                        # 2. Compute Total M
+                        total_M = 1
+                        for m in m_vals:
+                            total_M *= m
+
+                        # 3. Compute M_i and Inverses y_i
+                        table_rows = []
+                        terms = []
+                        total_sum = 0
+
+                        for i in range(k):
+                            r_i = r_vals[i]
+                            m_i = m_vals[i]
+                            M_i = total_M // m_i
+                            y_i = mod_inverse(M_i, m_i)
+                            term = r_i * M_i * y_i
+                            total_sum += term
+                            terms.append(f"({r_i} \\times {M_i} \\times {y_i})")
+
+                            table_rows.append({
+                                "Index $i$": i + 1,
+                                "Remainder $r_i$": r_i,
+                                "Modulus $m_i$": m_i,
+                                "Partial Modulus $M_i = M / m_i$": M_i,
+                                "Inverse $y_i \\equiv M_i^{-1} \\pmod{m_i}$": y_i,
+                                "Product $r_i M_i y_i$": term
+                            })
+
+                        ans = total_sum % total_M
+
+                        st.success(f"### Unique Solution: $x \\equiv {ans} \\pmod{{{total_M}}}$")
+
+                        with st.expander("📝 Step-by-Step Constructive Proof", expanded=True):
+                            st.markdown(f"""
+                            #### Step 1: Compute Total Modulus $M$
+                            $$M = \\prod_{{i=1}}^{{{k}}} m_i = {' \\times '.join(str(m) for m in m_vals)} = \\mathbf{{{total_M}}}$$
+
+                            #### Step 2: Compute Partial Moduli & Bézout Inverses
+                            For each congruence, compute $M_i = \\frac{{M}}{{m_i}}$ and solve $M_i \\cdot y_i \\equiv 1 \\pmod{{m_i}}$:
+                            """)
+
+                            st.table(pd.DataFrame(table_rows))
+
+                            st.markdown(f"""
+                            #### Step 3: Formulate the Linear Combination
+                            Construct the solution sum:
+                            $$x_0 = \\sum_{{i=1}}^{{{k}}} r_i M_i y_i = {' + '.join(terms)}$$
+                            $$x_0 = \\mathbf{{{total_sum}}}$$
+
+                            #### Step 4: Canonical Reduction Modulo $M$
+                            $$x = x_0 \\pmod{{M}} = {total_sum} \\pmod{{{total_M}}} = \\mathbf{{{ans}}}$$
+                            """)
+
+                            st.markdown("#### Step 5: Verification Checklist")
+                            verifications = []
+                            for i in range(k):
+                                actual = ans % m_vals[i]
+                                is_ok = (actual == r_vals[i])
+                                verifications.append(f"* **Equation {i+1}:** ${ans} \\pmod{{{m_vals[i]}}} = {actual}$ (Target: ${r_vals[i]}$) {'✅ Satisfied' if is_ok else '❌ Failed'}")
+                            st.markdown("\n".join(verifications))
+
             except Exception as e:
-                st.error(f"Error solving CRT: {e}")
+                st.error(f"Error solving system: {e}")
 
-    elif calc == "Prime Factorization":
-        num = st.number_input("Integer n to factor", value=360, min_value=2)
-        if st.button("Factorize"):
-            factors = prime_factors(int(num))
-            st.write(f"Prime Decomposition of ${num}$: **`{factors}`**")
+    # ---------------------------------------------------------
+    # 3. PRIME FACTORIZATION & NUMBER THEORY PROPERTIES
+    # ---------------------------------------------------------
+    elif calc == "Prime Factorization & Divisor Analysis":
+        st.write("Decompose an integer into its unique prime factor representation according to the **Fundamental Theorem of Arithmetic**.")
+        num_in = st.number_input("Integer n to factorize", value=360, min_value=2, step=1)
+
+        if st.button("Factorize & Analyze", type="primary"):
+            n = int(num_in)
+            factors = prime_factors(n)
+
+            # Build canonical string
+            decomp_latex = " \\times ".join([f"{p}^{{{exp}}}" if exp > 1 else f"{p}" for p, exp in sorted(factors.items())])
+            st.markdown(f"### $${n} = {decomp_latex}$$")
+
+            with st.expander("🔬 Structural Divisor & Totient Breakdown", expanded=True):
+                # Calculate number of divisors: prod(exp + 1)
+                num_divisors = 1
+                for exp in factors.values():
+                    num_divisors *= (exp + 1)
+
+                # Calculate Euler's totient: n * prod(1 - 1/p)
+                phi_val = n
+                for p in factors.keys():
+                    phi_val = (phi_val * (p - 1)) // p
+
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Distinct Prime Bases", len(factors))
+                c2.metric("Total Divisors d(n)", num_divisors)
+                c3.metric("Euler's Totient φ(n)", phi_val)
+
+                st.markdown(f"""
+                * **Fundamental Theorem of Arithmetic:** Every integer $n > 1$ can be represented uniquely as a product of prime powers:
+                  $$n = \\prod_{{i=1}}^{{k}} p_i^{{a_i}} = {decomp_latex}$$
+                * **Divisor Count Formula $d(n)$:**
+                  $$d({n}) = \\prod (a_i + 1) = {' \\times '.join(f'({exp} + 1)' for exp in factors.values())} = \\mathbf{{{num_divisors}}}$$
+                * **Euler's Totient $\\phi(n)$ (Coprime Count):**
+                  The count of integers in $[1, {n}]$ coprime to ${n}$ is:
+                  $$\\phi({n}) = {n} \\prod_{{p \vert{} n}} \\left(1 - \\frac{{1}}{{p}}\\right) = \\mathbf{{{phi_val}}}$$
+                """)
 # -------------------------------------------------------------
 # 5. COMBINATORICS ENGINE
 # -------------------------------------------------------------
-# -------------------------------------------------------------
-# 5. COMBINATORICS ENGINE
-# -------------------------------------------------------------
+
 with tab_comb:
     st.markdown("""
     <div class="edu-card">
