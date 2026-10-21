@@ -137,11 +137,12 @@ tab_graph, tab_crypto, tab_logic, tab_num, tab_comb, tab_audit = st.tabs([
 # -------------------------------------------------------------
 # 1. GRAPH PLAYGROUND
 # -------------------------------------------------------------
+
 with tab_graph:
     st.markdown("""
     <div class="edu-card">
         <span class="edu-badge">Module: Graph Theory</span>
-        <h4 style="margin: 0; color: #c0caf5;">Interactive Network Analyzer & Physics Visualizer</h4>
+        <h4 style="margin: 0; color: #c0caf5;">Interactive Topology Analyzer & Physics Visualizer</h4>
         <p style="color: #9aa5ce; font-size: 0.95rem; margin-top: 6px;">
             Construct graph topologies to inspect connectivity, bipartite structures, adjacency matrices, and cycle detection.
         </p>
@@ -154,18 +155,19 @@ with tab_graph:
         st.subheader("Graph Construction")
         preset = st.selectbox(
             "Load a Standard Topology Preset",
-            ["Custom", "Cycle C5", "Complete K4", "Petersen Graph (Edges)", "Star Tree"]
+            ["Custom", "Bipartite Graph K3,3", "Cycle C5 (Odd Cycle - Non-Bipartite)", "Complete K4", "Petersen Graph", "Star Tree"]
         )
 
         preset_map = {
             "Custom": "[(1, 2), (2, 3), (3, 4), (4, 1), (2, 4)]",
-            "Cycle C5": "[(1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]",
+            "Bipartite Graph K3,3": "[(1, 4), (1, 5), (1, 6), (2, 4), (2, 5), (2, 6), (3, 4), (3, 5), (3, 6)]",
+            "Cycle C5 (Odd Cycle - Non-Bipartite)": "[(1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]",
             "Complete K4": "[(1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)]",
-            "Petersen Graph (Edges)": "[(1,2), (2,3), (3,4), (4,5), (5,1), (1,6), (2,7), (3,8), (4,9), (5,10), (6,8), (8,10), (10,7), (7,9), (9,6)]",
+            "Petersen Graph": "[(1,2), (2,3), (3,4), (4,5), (5,1), (1,6), (2,7), (3,8), (4,9), (5,10), (6,8), (8,10), (10,7), (7,9), (9,6)]",
             "Star Tree": "[(1, 2), (1, 3), (1, 4), (1, 5)]"
         }
 
-        edge_input = st.text_area("Edge Tuples", value=preset_map[preset], height=90)
+        edge_input = st.text_area("Edge Tuples (List of pairs)", value=preset_map[preset], height=80)
         is_directed = st.toggle("Directed Network", value=False)
         render_btn = st.button("Analyze & Render Graph", type="primary")
 
@@ -181,35 +183,97 @@ with tab_graph:
                 comps = g.connected_components()
                 has_cyc = g.has_cycle()
                 is_tr = g.is_tree()
+                is_bip, color_map = g.is_bipartite()
 
-                m1, m2, m3 = st.columns(3)
+                # Metric Cards HUD
+                m1, m2, m3, m4 = st.columns(4)
                 m1.metric("Vertices |V|", len(g.nodes))
                 m2.metric("Edges |E|", len(g.edges))
                 m3.metric("Components", len(comps))
+                m4.metric("Bipartite?", "Yes ✅" if is_bip else "No ❌")
 
-                st.write(f"**Has Cycle:** `{'Yes' if has_cyc else 'No'}` | **Is Tree:** `{'Yes' if is_tr else 'No'}`")
-
-                with st.expander("📊 Adjacency Matrix Representation", expanded=False):
-                    df_mat = pd.DataFrame(adj_mat, index=nodes_list, columns=nodes_list)
-                    st.dataframe(df_mat, use_container_width=True)
-
+                # Interactive Pyvis Canvas with Bipartite Color Coding
                 try:
                     from pyvis.network import Network
-                    net = Network(height="340px", width="100%", bgcolor="#0e0f18", font_color="#c0caf5")
+                    net = Network(height="320px", width="100%", bgcolor="#0e0f18", font_color="#c0caf5")
+                    
                     for node in g.nodes:
-                        net.add_node(node, label=str(node), color="#bb9af7", size=18)
+                        # Color nodes by 2-color partition if bipartite
+                        if is_bip and node in color_map:
+                            node_color = "#7aa2f7" if color_map[node] == 0 else "#f7768e"
+                        else:
+                            node_color = "#bb9af7"
+                        net.add_node(node, label=f"V: {node}", color=node_color, size=18)
+
                     for u, v in g.edges:
-                        net.add_edge(u, v, color="#7aa2f7")
+                        net.add_edge(u, v, color="#565f89")
                     
                     html_path = "temp_graph.html"
                     net.save_graph(html_path)
                     with open(html_path, "r", encoding="utf-8") as f:
-                        st.components.v1.html(f.read(), height=360)
+                        st.components.v1.html(f.read(), height=340)
                 except Exception as pyvis_err:
-                    st.info(f"Pyvis preview: {pyvis_err}")
+                    st.info(f"Pyvis render preview: {pyvis_err}")
 
             except Exception as e:
                 st.error(f"Error parsing graph structure: {e}")
+
+    # ---------------------------------------------------------
+    # PEDAGOGICAL BREAKDOWNS & THEORETICAL VERIFICATIONS
+    # ---------------------------------------------------------
+    if 'g' in locals() and g.nodes:
+        st.markdown("---")
+        st.subheader("🔬 Deep Graph Analysis & Theoretical Proofs")
+        
+        c_left, c_right = st.columns(2)
+
+        with c_left:
+            with st.expander("🧩 1. Connectivity & Component Decomposition", expanded=True):
+                is_connected = len(comps) == 1
+                st.markdown(f"""
+                * **Status:** {'**Connected Graph** (1 component)' if is_connected else f'**Disconnected Graph** ({len(comps)} components)'}
+                * **Formal Definition:** A graph is connected if there is a path between every pair of vertices.
+                * **Component Partition ($V = \\bigcup C_i$):**
+                """)
+                for idx, comp in enumerate(comps):
+                    st.markdown(f"  * **Component {idx+1}:** `{{{', '.join(comp)}}}` (Size: {len(comp)})")
+
+            with st.expander("🎨 2. Bipartite Structure & 2-Colorability", expanded=True):
+                if is_bip:
+                    set_1 = [node for node, c in color_map.items() if c == 0]
+                    set_2 = [node for node, c in color_map.items() if c == 1]
+                    st.success("✅ **Graph is Bipartite (2-Colorable)**")
+                    st.markdown(f"""
+                    * **Theorem (Kőnig):** A graph is bipartite if and only if it contains **no odd-length cycles**.
+                    * **Independent Set $V_1$ (Blue):** `{{{', '.join(set_1)}}}`
+                    * **Independent Set $V_2$ (Red):** `{{{', '.join(set_2)}}}`
+                    * **Property:** Every edge in $E$ joins a vertex in $V_1$ to a vertex in $V_2$. No two vertices within the same set share an edge.
+                    """)
+                else:
+                    st.error("❌ **Graph is NOT Bipartite**")
+                    st.markdown("""
+                    * **Reason:** The graph contains at least one **odd-length cycle** (e.g., a triangle $C_3$ or pentagon $C_5$).
+                    * **Consequence:** It is impossible to color the vertices with 2 colors without two adjacent vertices sharing the same color.
+                    """)
+
+        with c_right:
+            with st.expander("🔄 3. Cycle Detection & Tree Verification", expanded=True):
+                st.markdown(f"""
+                * **Contains Cycle:** `{'Yes (DFS detected a back-edge)' if has_cyc else 'No (Acyclic / Forest)'}`
+                * **Is a Tree:** `{'Yes ✅' if is_tr else 'No ❌'}`
+                * **Tree Conditions Verification:**
+                  1. **Connectivity Check:** {'✅ Satisfied (1 component)' if len(comps) == 1 else '❌ Failed (Disconnected)'}
+                  2. **Acyclic Check:** {'✅ Satisfied (No cycles)' if not has_cyc else '❌ Failed (Contains cycles)'}
+                  3. **Euler Characteristic ($\vert{}E\vert{} = \vert{}V\vert{} - 1$):**
+                     * $\vert{}V\vert{} = {len(g.nodes)}$
+                     * $\vert{}E\vert{} = {len(g.edges)}$
+                     * $\vert{}E\vert{} = \vert{}V\vert{} - 1 \implies {len(g.edges)} = {len(g.nodes) - 1}$ {'✅ Holds' if len(g.edges) == len(g.nodes) - 1 else '❌ Does not hold'}
+                """)
+
+            with st.expander("📊 4. Adjacency Matrix $A(G)$", expanded=True):
+                st.markdown("The matrix entry $A_{i,j} = 1$ if vertex $v_i$ is adjacent to $v_j$, and $0$ otherwise:")
+                df_mat = pd.DataFrame(adj_mat, index=nodes_list, columns=nodes_list)
+                st.dataframe(df_mat, use_container_width=True)
 
 # -------------------------------------------------------------
 # 2. RSA & CRYPTOGRAPHY LAB
