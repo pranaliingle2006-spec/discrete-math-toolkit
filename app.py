@@ -225,60 +225,155 @@ with tab_graph:
 # -------------------------------------------------------------
 # 2. RSA & CRYPTOGRAPHY LAB
 # -------------------------------------------------------------
+# -------------------------------------------------------------
+# 2. RSA & CRYPTOGRAPHY LAB
+# -------------------------------------------------------------
 with tab_crypto:
     st.markdown("""
     <div class="edu-card">
         <span class="edu-badge">Module: Applied Cryptography</span>
-        <h4 style="margin: 0; color: #c0caf5;">Asymmetric & Modular Cryptographic Demonstrator</h4>
+        <h4 style="margin: 0; color: #c0caf5;">Asymmetric RSA & Modular Affine Ciphers</h4>
         <p style="color: #9aa5ce; font-size: 0.95rem; margin-top: 6px;">
-            See how the <b>Extended Euclidean Algorithm</b> and <b>Euler's Totient Theorem</b> power modern digital security through verifiable trapdoor functions.
+            See how the <b>Extended Euclidean Algorithm</b> and <b>Euler's Totient Theorem</b> power modern digital security through verifiable one-way trapdoor functions.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    crypto_mode = st.radio("Select Cryptosystem", ["RSA Public-Key Algorithm", "Affine Shift Cipher"], horizontal=True)
+    crypto_mode = st.radio("Select Cryptosystem", ["RSA Public-Key Cryptosystem", "Affine Substitution Cipher"], horizontal=True)
 
-    if crypto_mode == "RSA Public-Key Algorithm":
-        c_in, c_out = st.columns([1, 1])
-        with c_in:
-            st.subheader("1. Message Transmission")
-            plain_msg = st.text_input("Plaintext Message", value="DISCRETE MATH")
-            regen_keys = st.button("Generate Fresh RSA Keypair", type="primary")
+    # =========================================================
+    # 1. RSA PUBLIC-KEY ALGORITHM
+    # =========================================================
+    if crypto_mode == "RSA Public-Key Cryptosystem":
+        if "rsa_keys" not in st.session_state:
+            st.session_state.rsa_keys = generate_rsa_keys()
 
-        with c_out:
-            st.subheader("2. Cryptographic Execution")
-            keys = generate_rsa_keys()
-            cipher = rsa_encrypt(plain_msg, keys["public_key"])
-            decrypted = rsa_decrypt(cipher, keys["private_key"])
-            
+        col_left, col_right = st.columns([1, 1])
+
+        with col_left:
+            st.subheader("1. Keypair Architecture & Parameters")
+            if st.button("Generate Fresh Prime Keypair", type="primary"):
+                st.session_state.rsa_keys = generate_rsa_keys()
+                st.success("New RSA keypair generated successfully!")
+
+            keys = st.session_state.rsa_keys
+            p, q = keys["p"], keys["q"]
+            e, n = keys["public_key"]
+            d, _ = keys["private_key"]
+            phi = keys["phi"]
+
             st.markdown(f"""
-            * **Prime Factors:** $p = {keys['p']}, \\; q = {keys['q']}$
-            * **Modulus ($n = p \\times q$):** `{keys['public_key'][1]}`
-            * **Euler's Totient $\\phi(n) = (p-1)(q-1)$:** `{keys['phi']}`
-            * **Public Key $(e, n)$:** `({keys['public_key'][0]}, {keys['public_key'][1]})`
-            * **Private Exponent $d = e^{{-1}} \\pmod{{\\phi(n)}}$:** `{keys['private_key'][0]}`
+            * **Secret Prime $p$:** `{p}`
+            * **Secret Prime $q$:** `{q}`
+            * **Public Modulus ($n = p \\times q$):** `{n}`
+            * **Euler's Totient $\\phi(n) = (p-1)(q-1)$:** `{phi}`
+            * **Public Exponent ($e$ coprime to $\\phi(n)$):** `{e}`
+            * **Private Exponent ($d = e^{{-1}} \\pmod{{\\phi(n)}}$):** `{d}`
             """)
-            st.code(f"Encrypted Cipher Numbers:\n{cipher}", language="python")
-            st.success(f"Verified Decrypted Output: **{decrypted}**")
 
+            with st.expander("🔑 How Key Generation Works (Euler's Totient & Bézout)", expanded=False):
+                st.markdown(f"""
+                1. **Choose two primes:** $p = {p}, \\; q = {q}$
+                2. **Compute Modulus:** $n = {p} \\times {q} = {n}$ (Publicly shared). Factoring $n$ back into $p, q$ is computationally hard for large numbers.
+                3. **Compute Totient:** $\\phi(n) = ({p}-1)({q}-1) = {phi}$
+                4. **Select Public Exponent $e$:** Chosen such that $\\gcd(e, \\phi(n)) = \\gcd({e}, {phi}) = 1$.
+                5. **Compute Private Exponent $d$ via Bézout's Identity:**
+                   $$e \\cdot d \\equiv 1 \\pmod{{\\phi(n)}}$$
+                   $$({e})({d}) \\pmod{{{phi}}} = {(e * d) \% phi}$$
+                   Anyone knowing $d$ can reverse exponentiation modulo $n$.
+                """)
+
+        with col_right:
+            st.subheader("2. Message Transmission & Proof")
+            plain_msg = st.text_input("Plaintext Message to Encrypt", value="HELLO")
+            
+            if plain_msg:
+                cipher_tokens = rsa_encrypt(plain_msg, (e, n))
+                decrypted_msg = rsa_decrypt(cipher_tokens, (d, n))
+
+                st.markdown("**Encrypted Cipher Tokens:**")
+                st.code(f"{cipher_tokens}", language="python")
+                st.success(f"**Verified Decrypted Output:** `{decrypted_msg}`")
+
+        # Step-by-Step Character Transformation Table
+        if plain_msg:
+            st.markdown("---")
+            with st.expander("🔬 Step-by-Step Character-by-Character Computation Table", expanded=True):
+                char_steps = []
+                for ch, c_val in zip(plain_msg, cipher_tokens):
+                    m_ord = ord(ch)
+                    # Recovery calculation
+                    recovered_ord = pow(c_val, d, n)
+                    recovered_ch = chr(recovered_ord)
+                    char_steps.append({
+                        "Char": ch,
+                        "ASCII $M = \\text{ord}(c)$": m_ord,
+                        "Encryption: $C = M^e \\pmod n$": f"{m_ord}^{{{e}}} \\equiv {c_val} \\pmod{{{n}}}",
+                        "Cipher Token $C$": c_val,
+                        "Decryption: $M = C^d \\pmod n$": f"{c_val}^{{{d}}} \\equiv {recovered_ord} \\pmod{{{n}}}",
+                        "Recovered Char": recovered_ch
+                    })
+                st.table(pd.DataFrame(char_steps))
+
+                st.info(f"""
+                **Why does decryption work?**  
+                By **Euler's Totient Theorem**, since $e \\cdot d \\equiv 1 \\pmod{{\\phi(n)}}$, there exists an integer $k$ such that $e \\cdot d = 1 + k \\cdot \\phi(n)$.  
+                Therefore:  
+                $$C^d \\equiv (M^e)^d = M^{{e \\cdot d}} = M^{{1 + k \\cdot \\phi(n)}} = M \\cdot (M^{{\\phi(n)}})^k \\equiv M \\cdot (1)^k \\equiv M \\pmod n$$
+                """)
+
+    # =========================================================
+    # 2. AFFINE SUBSTITUTION CIPHER
+    # =========================================================
     else:
         st.subheader("Affine Cipher: $E(x) = (a \\cdot x + b) \\pmod{26}$")
+        st.markdown("A monoalphabetic substitution cipher combining modular multiplication (decimation) and modular addition (shift).")
+
         col_a, col_b, col_t = st.columns(3)
-        msg_aff = col_t.text_input("Plaintext / Ciphertext", value="HELLOMATH")
-        a_key = col_a.number_input("Multiplier (a coprime with 26)", value=5, min_value=1, max_value=25, step=2)
-        b_key = col_b.number_input("Additive Shift (b)", value=8, min_value=0, max_value=25)
-        
-        gcd_val, _, _ = extended_gcd(int(a_key), 26)
+        msg_aff = col_t.text_input("Plaintext (A-Z)", value="DISCRETE")
+        a_key = col_a.number_input("Multiplier a (coprime to 26)", value=5, min_value=1, max_value=25, step=1)
+        b_key = col_b.number_input("Additive Shift b", value=8, min_value=0, max_value=25, step=1)
+
+        import math
+        gcd_val = math.gcd(int(a_key), 26)
+
         if gcd_val != 1:
-            st.error(f"Cannot use $a = {a_key}$! $\\gcd({a_key}, 26) = {gcd_val} \\neq 1$. Key must be coprime to 26.")
+            st.error(f"❌ Key $a = {a_key}$ is invalid! $\\gcd({a_key}, 26) = {gcd_val} \\neq 1$. An inverse does not exist modulo 26, so decryption would be impossible.")
         else:
-            c1, c2 = st.columns(2)
-            with c1:
-                enc = affine_encrypt(msg_aff, int(a_key), int(b_key))
-                st.write(f"Encrypted Output: **`{enc}`**")
-            with c2:
-                dec = affine_decrypt(enc, int(a_key), int(b_key))
-                st.write(f"Decrypted Verification: **`{dec}`**")
+            a_inv = mod_inverse(int(a_key), 26)
+            enc_text = affine_encrypt(msg_aff, int(a_key), int(b_key))
+            dec_text = affine_decrypt(enc_text, int(a_key), int(b_key))
+
+            c_enc, c_dec = st.columns(2)
+            c_enc.metric("Encrypted Ciphertext", enc_text)
+            c_dec.metric("Decrypted Verification", dec_text)
+
+            with st.expander("📝 Step-by-Step Substitution Walkthrough", expanded=True):
+                st.markdown(f"""
+                #### Key Mathematical Inversion
+                * **Encryption Key:** $a = {a_key}, \\; b = {b_key}$
+                * **Decryption Key $a^{{-1}} \\pmod{{26}}$:** $({a_key} \\times {a_inv}) \\pmod{{26}} = {(int(a_key) * a_inv) \% 26} \\implies \\mathbf{{a^{{-1}} = {a_inv}}}$
+                * **Decryption Formula:** 
+                  $$D(y) = a^{{-1}}(y - b) \\pmod{{26}} = {a_inv}(y - {b_key}) \\pmod{{26}}$$
+                """)
+
+                step_data = []
+                for orig_ch, enc_ch in zip(msg_aff.upper(), enc_text):
+                    if orig_ch.isalpha():
+                        x = ord(orig_ch) - ord('A')
+                        y = (int(a_key) * x + int(b_key)) % 26
+                        recovered_x = (a_inv * (y - int(b_key))) % 26
+                        step_data.append({
+                            "Plain Letter": orig_ch,
+                            "Index $x$ (0-25)": x,
+                            "Encrypt: $(a \\cdot x + b) \\pmod{26}$": f"({a_key} \\times {x} + {b_key}) \\pmod{{26}} = {y}",
+                            "Cipher Letter": enc_ch,
+                            "Decrypt: $a^{-1}(y - b) \\pmod{26}$": f"{a_inv}({y} - {b_key}) \\pmod{{26}} = {recovered_x}",
+                            "Recovered Letter": chr(recovered_x + ord('A'))
+                        })
+
+                if step_data:
+                    st.table(pd.DataFrame(step_data))
 
 # -------------------------------------------------------------
 # 3. TRUTH TABLES & SETS
