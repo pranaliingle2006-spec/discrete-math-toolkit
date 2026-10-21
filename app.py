@@ -279,7 +279,7 @@ with tab_crypto:
                 4. **Select Public Exponent $e$:** Chosen such that $\\gcd(e, \\phi(n)) = \\gcd({e}, {phi}) = 1$.
                 5. **Compute Private Exponent $d$ via Bézout's Identity:**
                    $$e \\cdot d \\equiv 1 \\pmod{{\\phi(n)}}$$
-                   $$({e})({d}) \\pmod{{{phi}}} = {(e * d) \% phi}$$
+                   $$({e})({d}) \\pmod{{{phi}}} = {(e * d) % phi}$$
                    Anyone knowing $d$ can reverse exponentiation modulo $n$.
                 """)
 
